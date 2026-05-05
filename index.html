@@ -2,152 +2,71 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Scienza AR - Prototipo</title>
-<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-look-around.js"></script>
-<script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Debug AR Scienza</title>
+
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-look-around.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+
     <style>
-        body { margin: 0; font-family: 'Arial', sans-serif; overflow: hidden; }
-        #start-screen, #quiz-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 25, 47, 0.95); color: white; display: flex;
-            flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #debug-console {
+            position: fixed; top: 10px; left: 10px; z-index: 10000;
+            color: lime; font-family: monospace; font-size: 10px;
+            pointer-events: none; background: rgba(0,0,0,0.5);
         }
-        #quiz-screen { display: none; background: rgba(0, 0, 0, 0.85); }
-        .box { background: #112240; padding: 30px; border-radius: 15px; border: 2px solid #64ffda; text-align: center; max-width: 80%; }
-        input, button { padding: 12px; margin: 10px; border-radius: 5px; border: none; font-size: 1rem; }
-        button { background: #64ffda; color: #0a192f; font-weight: bold; cursor: pointer; }
-        #game-ui {
-            position: fixed; top: 10px; left: 10px; width: calc(100% - 20px);
-            display: none; justify-content: space-between; z-index: 1000; color: #64ffda;
+        #start-button {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 20px 40px; font-size: 20px; z-index: 10001;
+            background: #64ffda; border: none; border-radius: 10px; cursor: pointer;
         }
-        .stat { background: rgba(10, 25, 47, 0.8); padding: 8px 15px; border-radius: 5px; border: 1px solid #64ffda; }
     </style>
 </head>
+
 <body>
+    <div id="debug-console">Inizializzazione...</div>
+    <button id="start-button" onclick="startExperience()">CLICCA PER ATTIVARE CAMERA</button>
 
-    <div id="start-screen">
-        <div class="box">
-            <h1>Missione Scientifica AR</h1>
-            <p>Trova gli oggetti e risolvi gli enigmi.</p>
-            <input type="text" id="username" placeholder="Tuo Nome Scienziato">
-            <button onclick="startGame()">AVVIA MISSIONE</button>
-        </div>
-    </div>
-
-    <div id="quiz-screen">
-        <div class="box">
-            <h2 id="quiz-question">Domanda...</h2>
-            <div id="quiz-options"></div>
-        </div>
-    </div>
-
-    <div id="game-ui">
-        <div class="stat">Scienziato: <span id="u-name"></span> | Punti: <span id="u-score">0</span></div>
-        <div class="stat">⏳ <span id="timer">60:00</span> | 🔍 <span id="found">0</span>/3</div>
-    </div>
-
-   <a-scene 
-  embedded 
-  arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;" 
-  vr-mode-ui="enabled: false">
-        <a-entity id="obj1" gps-entity-place="latitude: 34.550485; longitude: 58.440717;" class="treasure">
-            <a-image src="https://cdn-icons-png.flaticon.com/512/2505/2505671.png" scale="4 4 4" look-at="[gps-camera]"></a-image>
-            <a-ring color="yellow" radius-inner="2.2" radius-outer="2.5" visible="false" id="ring1" animation="property: material.color; from: yellow; to: red; dir: alternate; dur: 300; loop: true"></a-ring>
-            <a-text value="TROVATO" align="center" position="0 -2.5 0" color="#64ffda" visible="false" id="text1" scale="2.5 2.5 2.5"></a-text>
-        </a-entity>
-
-        <a-entity id="obj2" gps-entity-place="latitude: 34.550485; longitude: 58.440717;" class="treasure">
-            <a-image src="https://cdn-icons-png.flaticon.com/512/1043/1043132.png" scale="4 4 4" look-at="[gps-camera]"></a-image>
-            <a-ring color="yellow" radius-inner="2.2" radius-outer="2.5" visible="false" id="ring2" animation="property: material.color; from: yellow; to: red; dir: alternate; dur: 300; loop: true"></a-ring>
-            <a-text value="TROVATO" align="center" position="0 -2.5 0" color="#64ffda" visible="false" id="text2" scale="2.5 2.5 2.5"></a-text>
-        </a-entity>
-
-        <a-entity id="obj3" gps-entity-place="latitude: 34.550485; longitude: 58.440717;" class="treasure">
-            <a-image src="https://cdn-icons-png.flaticon.com/512/3593/3593121.png" scale="4 4 4" look-at="[gps-camera]"></a-image>
-            <a-ring color="yellow" radius-inner="2.2" radius-outer="2.5" visible="false" id="ring3" animation="property: material.color; from: yellow; to: red; dir: alternate; dur: 300; loop: true"></a-ring>
-            <a-text value="TROVATO" align="center" position="0 -2.5 0" color="#64ffda" visible="false" id="text3" scale="2.5 2.5 2.5"></a-text>
-        </a-entity>
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;" 
+        vr-mode-ui="enabled: false">
+        
+        <a-box position="0 0.5 -5" material="color: red;" look-at="[gps-camera]"
+               gps-entity-place="latitude: 45.4641; longitude: 9.1901;">
+        </a-box>
 
         <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
 
     <script>
-        document.body.style.backgroundColor = "transparent";
-        let score = 0, timeLeft = 3600, foundCount = 0, timerInterval;
-        const questions = [
-            { q: "Qual è la carica elettrica di un neutrone?", options: ["Positiva", "Negativa", "Neutra"], correct: 2 },
-            { q: "Il numero Pi Greco (3,14...) è:", options: ["Razionale", "Irrazionale", "Intero"], correct: 1 },
-            { q: "Accelerazione di gravità sulla Terra (m/s²):", options: ["9.8", "1.6", "12.5"], correct: 0 }
-        ];
+        const log = (msg) => {
+            document.getElementById('debug-console').innerHTML += `<br>> ${msg}`;
+            console.log(msg);
+        };
 
-        function startGame() {
-            const name = document.getElementById('username').value;
-            if(!name) return alert("Inserisci il tuo nome!");
-            document.getElementById('u-name').innerText = name;
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'flex';
-            startTimer();
-            setupGame();
+        window.onerror = (msg, url, line) => {
+            log(`ERRORE: ${msg} (linea ${line})`);
+        };
+
+        function startExperience() {
+            log("Pulsante cliccato");
+            document.getElementById('start-button').style.display = 'none';
+            log("Tentativo avvio camera...");
+            
+            // Forza il browser a svegliarsi
+            const scene = document.querySelector('a-scene');
+            if (scene) {
+                log("Scena trovata");
+                // Questo comando forza AR.js a inizializzare la camera
+                scene.addEventListener('loaded', () => log("A-Frame Caricato!"));
+            } else {
+                log("ERRORE: Scena non trovata!");
+            }
         }
 
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
-                document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
-                if(timeLeft <= 0) endGame();
-            }, 1000);
-        }
-
-        function setupGame() {
-            document.querySelectorAll('.treasure').forEach((obj, i) => {
-                obj.addEventListener('click', () => {
-                    if(document.getElementById(`ring${i+1}`).getAttribute('visible') === false) {
-                        showQuiz(i);
-                    }
-                });
-            });
-        }
-
-        function showQuiz(index) {
-            const q = questions[index];
-            document.getElementById('quiz-question').innerText = q.q;
-            const optionsDiv = document.getElementById('quiz-options');
-            optionsDiv.innerHTML = '';
-            q.options.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(index, i);
-                optionsDiv.appendChild(btn);
-            });
-            document.getElementById('quiz-screen').style.display = 'flex';
-        }
-
-        function checkAnswer(qIdx, aIdx) {
-            document.getElementById('quiz-screen').style.display = 'none';
-            let bonus = (aIdx === questions[qIdx].correct) ? 15 : 0;
-            if(bonus === 0) alert("Risposta errata! Nessun bonus scienziato.");
-            else alert("Corretto! +15 punti bonus.");
-
-            completeDiscovery(qIdx, bonus);
-        }
-
-        function completeDiscovery(idx, bonus) {
-            foundCount++;
-            let points = 20 + Math.floor(timeLeft / 60) + bonus;
-            score += points;
-            document.getElementById(`ring${idx+1}`).setAttribute('visible', 'true');
-            document.getElementById(`text${idx+1}`).setAttribute('visible', 'true');
-            document.getElementById('u-score').innerText = score;
-            document.getElementById('found').innerText = foundCount;
-            if(foundCount === 3) endGame();
-        }
-
-        function endGame() {
-            clearInterval(timerInterval);
-            alert(`MISSIONE FINITA!\nScienziato: ${document.getElementById('u-name').innerText}\nPunteggio Totale: ${score}`);
-        }
+        window.onload = () => log("Pagina caricata. Pronto.");
     </script>
 </body>
 </html>
