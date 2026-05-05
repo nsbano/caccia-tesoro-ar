@@ -3,70 +3,71 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Debug AR Scienza</title>
-
+    <title>Scienza AR - Fix Camera</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-look-around.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-
+    
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; }
-        #debug-console {
-            position: fixed; top: 10px; left: 10px; z-index: 10000;
-            color: lime; font-family: monospace; font-size: 10px;
-            pointer-events: none; background: rgba(0,0,0,0.5);
+        /* IMPORTANTE: Body deve essere trasparente per far vedere il video sotto */
+        body { margin: 0; overflow: hidden; background-color: transparent !important; }
+        
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; /* Diventa trasparente dopo il click */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
         }
-        #start-button {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            padding: 20px 40px; font-size: 20px; z-index: 10001;
-            background: #64ffda; border: none; border-radius: 10px; cursor: pointer;
+        
+        #game-ui {
+            position: fixed; top: 10px; left: 0; width: 100%;
+            display: none; justify-content: space-around; z-index: 1000;
+            pointer-events: none; /* Fa sì che i click passino attraverso l'UI per toccare gli oggetti */
         }
+
+        .stat-box { background: rgba(0,0,0,0.7); color: #64ffda; padding: 10px; border-radius: 8px; pointer-events: auto; }
     </style>
 </head>
 
 <body>
-    <div id="debug-console">Inizializzazione...</div>
-    <button id="start-button" onclick="startExperience()">CLICCA PER ATTIVARE CAMERA</button>
 
-    <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;" 
-        vr-mode-ui="enabled: false">
+    <div id="start-screen">
+        <h2 style="color: #0a192f">Benvenuto Scienziato</h2>
+        <button onclick="startGame()" style="padding: 15px 30px; background: #0a192f; color: white; border: none; border-radius: 5px;">
+            ATTIVA FOTOCAMERA
+        </button>
+    </div>
+
+    <div id="game-ui">
+        <div class="stat-box">🏆 Punti: <span id="score">0</span></div>
+        <div class="stat-box">⏳ <span id="timer">60:00</span></div>
+    </div>
+
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;" vr-mode-ui="enabled: false">
         
-        <a-box position="0 0.5 -5" material="color: red;" look-at="[gps-camera]"
-               gps-entity-place="latitude: 45.4641; longitude: 9.1901;">
-        </a-box>
+        <a-box position="0 0.5 -5" material="color: red;" look-at="[gps-camera]" 
+               gps-entity-place="latitude: 45.4641; longitude: 9.1901;"></a-box>
 
         <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
 
     <script>
-        const log = (msg) => {
-            document.getElementById('debug-console').innerHTML += `<br>> ${msg}`;
-            console.log(msg);
-        };
-
-        window.onerror = (msg, url, line) => {
-            log(`ERRORE: ${msg} (linea ${line})`);
-        };
-
-        function startExperience() {
-            log("Pulsante cliccato");
-            document.getElementById('start-button').style.display = 'none';
-            log("Tentativo avvio camera...");
+        function startGame() {
+            // 1. Rendi lo schermo di avvio invisibile
+            document.getElementById('start-screen').style.display = 'none';
             
-            // Forza il browser a svegliarsi
-            const scene = document.querySelector('a-scene');
-            if (scene) {
-                log("Scena trovata");
-                // Questo comando forza AR.js a inizializzare la camera
-                scene.addEventListener('loaded', () => log("A-Frame Caricato!"));
-            } else {
-                log("ERRORE: Scena non trovata!");
-            }
+            // 2. Mostra l'interfaccia di gioco
+            document.getElementById('game-ui').style.display = 'flex';
+            
+            // 3. FORZA la trasparenza del body (fondamentale!)
+            document.body.style.backgroundColor = "transparent";
+            
+            // Inizia il timer (esempio rapido)
+            let time = 3600;
+            setInterval(() => {
+                time--;
+                let m = Math.floor(time/60), s = time%60;
+                document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
+            }, 1000);
         }
-
-        window.onload = () => log("Pagina caricata. Pronto.");
     </script>
 </body>
 </html>
