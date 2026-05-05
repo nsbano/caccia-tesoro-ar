@@ -3,74 +3,91 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scienza AR - Fix Definitivo</title>
+    <title>Scienza AR - Fix Trasparenza</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-look-around.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent !important; }
+        /* Forza tutto a essere trasparente */
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent !important; }
         
-        /* Forza il video a stare sotto tutto */
-        #arjs-video {
-            position: absolute !important;
+        /* Assicura che la scena 3D non abbia sfondi colorati */
+        a-scene { background: none !important; }
+
+        canvas {
+            background-color: transparent !important;
+            z-index: 1 !important;
+        }
+
+        /* Il video deve stare SOTTO tutto */
+        video {
+            position: fixed !important;
             top: 0 !important;
             left: 0 !important;
+            z-index: -1 !important;
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
-            z-index: -2 !important;
         }
 
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0a192f; color: white; display: flex; 
-            flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
-        }
-
-        #game-ui {
+        #ui {
             position: fixed; top: 10px; width: 100%; display: none;
             justify-content: space-around; z-index: 1000; pointer-events: none;
         }
-
-        .stat-box { background: rgba(0,0,0,0.8); color: #64ffda; padding: 10px; border-radius: 8px; border: 1px solid #64ffda; }
-        button { padding: 15px 30px; font-size: 1.2rem; background: #64ffda; color: #0a192f; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .box { background: rgba(0,0,0,0.7); color: lime; padding: 10px; border-radius: 5px; border: 1px solid lime; }
+        
+        #btn { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 20px; font-size: 20px; z-index: 10000; background: lime; border: none; border-radius: 10px;
+        }
     </style>
 </head>
 
 <body>
 
-    <div id="start-screen">
-        <h1>REALTÀ ATTIVA</h1>
-        <button onclick="startGame()">AVVIA CAMERA</button>
+    <button id="btn" onclick="go()">ATTIVA CAMERA</button>
+
+    <div id="ui">
+        <div class="box">PUNTI: <span id="s">0</span></div>
+        <div class="box">TEMPO: <span id="t">60:00</span></div>
     </div>
 
-    <div id="game-ui">
-        <div class="stat-box">PUNTI: <span id="score">0</span></div>
-        <div class="stat-box">TEMPO: <span id="timer">60:00</span></div>
-    </div>
-
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+    <a-scene embedded 
+             arjs="sourceType: webcam; debugUIEnabled: false;" 
+             renderer="antialias: true; alpha: true; colorManagement: true;"
+             vr-mode-ui="enabled: false">
         
-        <a-box position="0 0.5 -5" material="color: red;" 
-               animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
-        </a-box>
-
+        <a-box position="0 0.5 -5" material="color: red;" animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
+        
         <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
 
     <script>
-        function startGame() {
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'flex';
+        function go() {
+            document.getElementById('btn').style.display = 'none';
+            document.getElementById('ui').style.display = 'flex';
+            
+            // Forza il body a essere trasparente
             document.body.style.backgroundColor = "transparent";
 
-            // Tentativo di forzare l'avvio del video se rimasto nero
-            const video = document.querySelector('video');
-            if (video) {
-                video.id = "arjs-video"; // Assegna l'ID per il CSS
-                video.play().catch(e => console.log("Errore autoplay:", e));
-            }
+            // Timer rapido
+            let time = 3600;
+            setInterval(() => {
+                time--;
+                let m = Math.floor(time/60), s = time%60;
+                document.getElementById('t').innerText = `${m}:${s<10?'0':''}${s}`;
+            }, 1000);
 
-            // Forza il ricalcolo delle dimensioni
+            // LOGICA DI EMERGENZA PER IL VIDEO
+            setTimeout(() => {
+                let v = document.querySelector('video');
+                if (v) {
+                    v.play();
+                    // Alcuni browser richiedono di spostare il video nel DOM per renderlo visibile
+                    document.body.appendChild(v);
+                    console.log("Video forzato");
+                }
+            }, 1000);
+
             window.dispatchEvent(new Event('resize'));
         }
     </script>
