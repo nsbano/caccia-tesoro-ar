@@ -3,70 +3,94 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scienza AR - Fix Camera</title>
+    <title>Scienza AR - Soluzione Finale</title>
+    
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-look-around.js"></script>
     
     <style>
-        /* IMPORTANTE: Body deve essere trasparente per far vedere il video sotto */
-        body { margin: 0; overflow: hidden; background-color: transparent !important; }
+        /* Forza il video della camera a riempire tutto lo schermo */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
         
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; /* Diventa trasparente dopo il click */
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
-        }
-        
-        #game-ui {
-            position: fixed; top: 10px; left: 0; width: 100%;
-            display: none; justify-content: space-around; z-index: 1000;
-            pointer-events: none; /* Fa sì che i click passino attraverso l'UI per toccare gli oggetti */
+        /* Regola magica per eliminare lo schermo nero */
+        video {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            z-index: -1 !important; /* Mette la camera DIETRO gli oggetti 3D */
         }
 
-        .stat-box { background: rgba(0,0,0,0.7); color: #64ffda; padding: 10px; border-radius: 8px; pointer-events: auto; }
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a192f; color: white; display: flex; 
+            flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+        }
+
+        #game-ui {
+            position: fixed; top: 10px; width: 100%; display: none;
+            justify-content: space-around; z-index: 1000; pointer-events: none;
+        }
+
+        .stat-box { background: rgba(0,0,0,0.8); color: #64ffda; padding: 10px; border-radius: 8px; border: 1px solid #64ffda; }
+        button { padding: 15px 30px; font-size: 1.2rem; background: #64ffda; color: #0a192f; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 
 <body>
 
     <div id="start-screen">
-        <h2 style="color: #0a192f">Benvenuto Scienziato</h2>
-        <button onclick="startGame()" style="padding: 15px 30px; background: #0a192f; color: white; border: none; border-radius: 5px;">
-            ATTIVA FOTOCAMERA
-        </button>
+        <h1>REALTÀ AUMENTATA</h1>
+        <p>Pronto per la sfida scientifica?</p>
+        <button onclick="startGame()">INIZIA MISSIONE</button>
     </div>
 
     <div id="game-ui">
-        <div class="stat-box">🏆 Punti: <span id="score">0</span></div>
-        <div class="stat-box">⏳ <span id="timer">60:00</span></div>
+        <div class="stat-box">PUNTI: <span id="score">0</span></div>
+        <div class="stat-box">TEMPO: <span id="timer">60:00</span></div>
     </div>
 
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;" vr-mode-ui="enabled: false">
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;" 
+        vr-mode-ui="enabled: false"
+        loading-screen="enabled: false">
         
-        <a-box position="0 0.5 -5" material="color: red;" look-at="[gps-camera]" 
-               gps-entity-place="latitude: 45.4641; longitude: 9.1901;"></a-box>
+        <a-box position="0 0.5 -5" material="color: red; opacity: 0.8" 
+               animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
+        </a-box>
 
         <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
 
     <script>
         function startGame() {
-            // 1. Rendi lo schermo di avvio invisibile
+            // Nascondi overlay
             document.getElementById('start-screen').style.display = 'none';
-            
-            // 2. Mostra l'interfaccia di gioco
             document.getElementById('game-ui').style.display = 'flex';
             
-            // 3. FORZA la trasparenza del body (fondamentale!)
+            // Rendi il body trasparente per mostrare il video
             document.body.style.backgroundColor = "transparent";
-            
-            // Inizia il timer (esempio rapido)
-            let time = 3600;
+
+            // LOGICA TIMER
+            let timeLeft = 3600;
             setInterval(() => {
-                time--;
-                let m = Math.floor(time/60), s = time%60;
-                document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' + s : s}`;
             }, 1000);
+
+            // TRUCCO FINALE: Forza il ridimensionamento della finestra per "svegliare" il video
+            window.dispatchEvent(new Event('resize'));
+            
+            // Se su Android il video resta nero, questo comando lo forza a riprodursi
+            let video = document.querySelector('video');
+            if (video) {
+                video.play();
+            }
         }
     </script>
 </body>
