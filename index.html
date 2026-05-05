@@ -3,24 +3,21 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scienza AR - Soluzione Finale</title>
-    
+    <title>Scienza AR - Fix Definitivo</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-look-around.js"></script>
-    
     <style>
-        /* Forza il video della camera a riempire tutto lo schermo */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent !important; }
         
-        /* Regola magica per eliminare lo schermo nero */
-        video {
-            position: fixed !important;
+        /* Forza il video a stare sotto tutto */
+        #arjs-video {
+            position: absolute !important;
             top: 0 !important;
             left: 0 !important;
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
-            z-index: -1 !important; /* Mette la camera DIETRO gli oggetti 3D */
+            z-index: -2 !important;
         }
 
         #start-screen {
@@ -42,9 +39,8 @@
 <body>
 
     <div id="start-screen">
-        <h1>REALTÀ AUMENTATA</h1>
-        <p>Pronto per la sfida scientifica?</p>
-        <button onclick="startGame()">INIZIA MISSIONE</button>
+        <h1>REALTÀ ATTIVA</h1>
+        <button onclick="startGame()">AVVIA CAMERA</button>
     </div>
 
     <div id="game-ui">
@@ -52,13 +48,9 @@
         <div class="stat-box">TEMPO: <span id="timer">60:00</span></div>
     </div>
 
-    <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;" 
-        vr-mode-ui="enabled: false"
-        loading-screen="enabled: false">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
         
-        <a-box position="0 0.5 -5" material="color: red; opacity: 0.8" 
+        <a-box position="0 0.5 -5" material="color: red;" 
                animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
         </a-box>
 
@@ -67,30 +59,19 @@
 
     <script>
         function startGame() {
-            // Nascondi overlay
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('game-ui').style.display = 'flex';
-            
-            // Rendi il body trasparente per mostrare il video
             document.body.style.backgroundColor = "transparent";
 
-            // LOGICA TIMER
-            let timeLeft = 3600;
-            setInterval(() => {
-                timeLeft--;
-                let m = Math.floor(timeLeft / 60);
-                let s = timeLeft % 60;
-                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0' + s : s}`;
-            }, 1000);
-
-            // TRUCCO FINALE: Forza il ridimensionamento della finestra per "svegliare" il video
-            window.dispatchEvent(new Event('resize'));
-            
-            // Se su Android il video resta nero, questo comando lo forza a riprodursi
-            let video = document.querySelector('video');
+            // Tentativo di forzare l'avvio del video se rimasto nero
+            const video = document.querySelector('video');
             if (video) {
-                video.play();
+                video.id = "arjs-video"; // Assegna l'ID per il CSS
+                video.play().catch(e => console.log("Errore autoplay:", e));
             }
+
+            // Forza il ricalcolo delle dimensioni
+            window.dispatchEvent(new Event('resize'));
         }
     </script>
 </body>
