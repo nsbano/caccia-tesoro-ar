@@ -1,121 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Caccia al Tesoro AR - Marker</title>
+    <title>Scienza AR - Caccia al Tesoro</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; background: transparent !important; font-family: sans-serif; }
-        video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
-        
-        /* UI del Quiz */
-        #quiz-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #2c3e50; color: white; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; z-index: 2000; text-align: center; padding: 20px;
+        :root {
+            --primary: #00d2ff;
+            --secondary: #00458b;
+            --accent: #f1c40f;
+            --dark: #1a1a2e;
         }
 
-        /* UI in AR */
-        #ar-ui {
-            position: fixed; top: 10px; width: 100%; z-index: 1000; display: none; 
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Video della camera sempre sotto */
+        video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
+
+        /* Sfondo Schermate UI */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark); color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 2000; padding: 20px; text-align: center;
+        }
+
+        /* Box Quiz */
+        .quiz-container { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; border: 2px solid var(--primary); width: 90%; max-width: 400px; }
+        
+        /* UI di Gioco (in AR) */
+        #game-ui {
+            position: fixed; top: 20px; width: 100%; z-index: 1000; display: none;
             justify-content: space-around; pointer-events: none;
         }
-        .stat { background: rgba(0,0,0,0.8); color: #f1c40f; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; }
+        .badge { background: rgba(0,0,0,0.8); color: var(--accent); padding: 10px 20px; border-radius: 15px; border: 1px solid var(--accent); font-weight: bold; }
+
+        /* Input e Bottoni */
+        input { width: 80%; padding: 12px; margin: 15px 0; border-radius: 8px; border: none; font-size: 16px; text-align: center; }
+        button { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; text-transform: uppercase; }
+        button:active { transform: scale(0.95); }
+
+        .hint-text { color: var(--accent); margin-top: 15px; font-style: italic; display: none; }
         
-        input { padding: 10px; font-size: 16px; margin: 10px 0; width: 80%; max-width: 300px; border-radius: 5px; border: none; text-align: center; }
-        button { padding: 15px 30px; font-size: 18px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        #ar-instruction { position: fixed; bottom: 30px; width: 100%; text-align: center; color: white; z-index: 1000; display: none; text-shadow: 2px 2px 4px black; }
     </style>
-
-    <script>
-        // COMPONENTE: Gestisce il tocco sull'oggetto
-        AFRAME.registerComponent('premio-cliccabile', {
-            init: function () {
-                this.el.addEventListener('click', () => {
-                    alert('🎉 OGGETTO TROVATO! +100 PUNTI!');
-                    
-                    // Aggiorna punteggio
-                    let scoreSpan = document.getElementById('score');
-                    scoreSpan.innerText = parseInt(scoreSpan.innerText) + 100;
-                    
-                    // Fa sparire l'oggetto dopo averlo toccato
-                    this.el.setAttribute('visible', 'false');
-
-                    // Opzionale: Torna al quiz dopo 2 secondi per la prossima domanda
-                    setTimeout(() => {
-                        alert("Preparati per il prossimo indizio!");
-                        // Qui potresti ricaricare l'interfaccia del quiz per la domanda 2
-                    }, 2000);
-                });
-            }
-        });
-    </script>
 </head>
-
 <body>
 
-    <div id="quiz-screen">
-        <h2>Domanda 1</h2>
-        <p>Qual è la molecola dell'acqua?</p>
-        <input type="text" id="risposta" placeholder="Es: CO2">
-        <button onclick="controllaRisposta()">CONFERMA</button>
-        
-        <div id="indizio" style="display: none; margin-top: 20px; color: #f1c40f;">
-            <p><strong>Corretto!</strong></p>
-            <p>Indizio: Vai in cucina e inquadra il simbolo magico (Hiro) sul tavolo.</p>
-            <button onclick="avviaAR()" style="background: #e67e22;">ATTIVA SCANNER AR</button>
+    <div id="login-screen" class="overlay">
+        <h1 style="color: var(--primary)">MISSIONE SCIENZA</h1>
+        <p>Inserisci i tuoi dati per iniziare la caccia</p>
+        <input type="text" id="nome" placeholder="Nome">
+        <input type="text" id="cognome" placeholder="Cognome">
+        <button onclick="startGame()">Inizia Gioco</button>
+    </div>
+
+    <div id="quiz-screen" class="overlay" style="display: none;">
+        <div class="quiz-container">
+            <h2 id="level-title">Livello 1</h2>
+            <p id="question-text">Domanda...</p>
+            <input type="text" id="answer-input" placeholder="Tua risposta">
+            <button onclick="checkAnswer()">Verifica</button>
+            <div id="hint-box" class="hint-text"></div>
+            <button id="btn-ar" onclick="activateAR()" style="display: none; background: #27ae60; margin-top: 15px;">Attiva Scanner AR</button>
         </div>
     </div>
 
-    <div id="ar-ui">
-        <div class="stat">PUNTI: <span id="score">0</span></div>
+    <div id="game-ui">
+        <div class="badge">UTENTE: <span id="ui-user">---</span></div>
+        <div class="badge">PUNTI: <span id="ui-score">0</span></div>
     </div>
+    <div id="ar-instruction">Inquadra il marcatore per trovare l'oggetto!</div>
 
     <a-scene embedded 
-             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
-             renderer="alpha: true; antialias: true;"
+             arjs="sourceType: webcam; debugUIEnabled: false;" 
+             renderer="alpha: true; antialias: true; preserveDrawingBuffer: true;"
              vr-mode-ui="enabled: false"
              cursor="rayOrigin: mouse" 
-             raycaster="objects: .interattivo">
+             raycaster="objects: .clickable">
         
-        <a-marker type="pattern" url="pattern-1.patt">
-            
-            <a-box class="interattivo" premio-cliccabile
-                   position="0 0.5 0" 
-                   material="color: gold; opacity: 0.9;" 
-                   animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
-            </a-box>
-            
+        <a-marker preset="hiro" id="main-marker">
+            <a-entity id="ar-object"
+                      class="clickable"
+                      premio-cliccabile
+                      position="0 0.5 0"
+                      scale="0.5 0.5 0.5"
+                      animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
+                <a-box id="visual-box" material="color: gold; opacity: 0.9;"></a-box>
+            </a-entity>
         </a-marker>
 
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        function controllaRisposta() {
-            let risposta = document.getElementById('risposta').value.toLowerCase().trim();
-            if (risposta === 'h2o') {
-                document.getElementById('indizio').style.display = 'block';
+        // DATI DEL GIOCO: 8 LIVELLI
+        const gameData = [
+            { q: "Qual è la formula chimica dell'acqua?", a: "h2o", hint: "Cerca dove l'acqua scorre (vicino a un lavandino)", color: "#00d2ff" },
+            { q: "Come si chiama l'elica che contiene il nostro codice genetico?", a: "dna", hint: "Cerca tra i libri di biologia", color: "#ff4757" },
+            { q: "Qual è la particella con carica negativa dell'atomo?", a: "elettrone", hint: "Cerca vicino a una fonte di elettricità", color: "#2ed573" },
+            { q: "Chi osservò per primo le cellule al microscopio?", a: "hooke", hint: "Cerca dove c'è molta luce", color: "#eccc68" },
+            { q: "Passaggio da liquido a gassoso?", a: "evaporazione", hint: "Cerca in cucina vicino ai fornelli", color: "#ffa502" },
+            { q: "Il pianeta più grande del sistema solare?", a: "giove", hint: "Cerca verso l'alto (finestra)", color: "#ff6b81" },
+            { q: "Unità di misura della tensione elettrica?", a: "volt", hint: "Cerca vicino a una presa di corrente", color: "#747d8c" },
+            { q: "La forza che attira tutto verso il centro della Terra?", a: "gravità", hint: "Cerca l'oggetto caduto sul pavimento", color: "#5352ed" }
+        ];
+
+        let currentLevel = 0;
+        let score = 0;
+        let user = "";
+
+        // Componente A-Frame per il tocco
+        AFRAME.registerComponent('premio-cliccabile', {
+            init: function () {
+                this.el.addEventListener('click', () => {
+                    if(document.getElementById('ar-instruction').style.display === 'block') {
+                        foundObject();
+                    }
+                });
+            }
+        });
+
+        function startGame() {
+            const nome = document.getElementById('nome').value;
+            const cognome = document.getElementById('cognome').value;
+            if(!nome || !cognome) return alert("Inserisci nome e cognome!");
+            
+            user = nome + " " + cognome;
+            document.getElementById('ui-user').innerText = user;
+            document.getElementById('login-screen').style.display = 'none';
+            loadLevel();
+        }
+
+        function loadLevel() {
+            if(currentLevel >= gameData.length) {
+                alert("CONGRATULAZIONI " + user + "! Hai completato la caccia con " + score + " punti!");
+                location.reload();
+                return;
+            }
+            
+            document.getElementById('quiz-screen').style.display = 'flex';
+            document.getElementById('game-ui').style.display = 'none';
+            document.getElementById('ar-instruction').style.display = 'none';
+            
+            document.getElementById('level-title').innerText = "Livello " + (currentLevel + 1);
+            document.getElementById('question-text').innerText = gameData[currentLevel].q;
+            document.getElementById('answer-input').value = "";
+            document.getElementById('hint-box').style.display = 'none';
+            document.getElementById('btn-ar').style.display = 'none';
+        }
+
+        function checkAnswer() {
+            const ans = document.getElementById('answer-input').value.toLowerCase().trim();
+            if(ans === gameData[currentLevel].a) {
+                document.getElementById('hint-box').innerText = "CORRETTO! " + gameData[currentLevel].hint;
+                document.getElementById('hint-box').style.display = 'block';
+                document.getElementById('btn-ar').style.display = 'block';
             } else {
-                alert('Risposta errata, scienziato! Riprova.');
+                alert("Risposta errata! Riprova.");
             }
         }
 
-        function avviaAR() {
+        function activateAR() {
             document.getElementById('quiz-screen').style.display = 'none';
-            document.getElementById('ar-ui').style.display = 'flex';
-            document.body.style.backgroundColor = "transparent";
+            document.getElementById('game-ui').style.display = 'flex';
+            document.getElementById('ar-instruction').style.display = 'block';
+            document.body.style.background = "transparent";
 
-            // Forza l'avvio della camera e risolve i problemi grafici
-            const video = document.querySelector('video');
-            if (video) { 
-                video.play(); 
-                video.style.zIndex = "-1"; 
-            }
+            // Cambia colore all'oggetto AR in base al livello
+            document.getElementById('visual-box').setAttribute('material', 'color', gameData[currentLevel].color);
+            
             window.dispatchEvent(new Event('resize'));
+        }
+
+        function foundObject() {
+            score += 100;
+            document.getElementById('ui-score').innerText = score;
+            alert("Ottimo! Hai trovato l'oggetto del livello " + (currentLevel + 1));
+            currentLevel++;
+            loadLevel();
         }
     </script>
 </body>
