@@ -236,12 +236,23 @@
         let score = 0;
         let user = "";
 
-        // Componente A-Frame per il tocco dell'oggetto 3D
+  // Componente A-Frame per il tocco dell'oggetto 3D
         AFRAME.registerComponent('premio-cliccabile', {
             init: function () {
-                this.el.addEventListener('click', () => {
+                this.el.addEventListener('click', (evento) => {
                     if(document.getElementById('ar-instruction').style.display === 'block') {
-                        foundObject();
+                        
+                        // Controlliamo in quale marcatore si trova l'oggetto cliccato
+                        const markerCliccato = this.el.parentNode.id;
+                        const markerCorretto = "marker-" + currentLevel;
+
+                        // Se l'utente inquadra il marcatore del livello giusto...
+                        if (markerCliccato === markerCorretto) {
+                            foundObject();
+                        } else {
+                            // Se inquadra un marcatore di un altro livello
+                            alert("Hai trovato un oggetto, ma non è quello giusto per questo livello! Segui l'indizio.");
+                        }
                     }
                 });
             }
@@ -308,7 +319,7 @@
             document.body.style.background = "transparent";
 
             // Cambia colore al cubo in base al livello attuale
-            document.getElementById('visual-box').setAttribute('material', 'color', gameData[currentLevel].color);
+           
             
             window.dispatchEvent(new Event('resize'));
         }
