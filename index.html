@@ -8,56 +8,92 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-    <style>
-        :root {
-            --primary: #00d2ff;
-            --secondary: #00458b;
-            --accent: #f1c40f;
-            --dark: #1a1a2e;
-        }
+   <style>
+    :root {
+        --primary: #00d2ff;
+        --secondary: #00458b;
+        --accent: #f1c40f;
+        --dark: #1a1a2e;
+    }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        /* Video della camera sempre sotto */
-        video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
+    body, html { 
+        margin: 0; padding: 0; width: 100%; height: 100%; 
+        overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        background: var(--dark);
+    }
+    
+    /* Fotocamera */
+    video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
 
-        /* Sfondo Schermate UI */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--dark); color: white; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 2000; padding: 20px; text-align: center;
-        }
+    /* Schermate a tutto schermo (Login e Quiz) */
+    .overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: var(--dark); color: white; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; z-index: 2000; text-align: center;
+    }
 
-        /* Box Quiz */
-        .quiz-container { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; border: 2px solid var(--primary); width: 90%; max-width: 400px; }
-        
-        /* UI di Gioco (in AR) */
-        #game-ui {
-            position: fixed; top: 20px; width: 100%; z-index: 1000; display: none;
-            justify-content: space-around; pointer-events: none;
-        }
-        .badge { background: rgba(0,0,0,0.8); color: var(--accent); padding: 10px 20px; border-radius: 15px; border: 1px solid var(--accent); font-weight: bold; }
+    /* NUOVO: Box specifico per il Login e il Quiz per tenerli centrati e compatti */
+    .login-box, .quiz-container { 
+        background: rgba(255,255,255,0.05); 
+        padding: 30px; 
+        border-radius: 20px; 
+        border: 2px solid var(--primary); 
+        width: 85%; 
+        max-width: 320px; /* Qui blocchiamo la larghezza eccessiva */
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    
+    /* UI di Gioco sopra la camera (Badge Punti/Utente) */
+    #game-ui {
+        position: fixed; top: 20px; width: 100%; z-index: 1000; display: none;
+        justify-content: space-around; pointer-events: none;
+    }
+    .badge { 
+        background: rgba(0,0,0,0.8); color: var(--accent); 
+        padding: 10px 15px; border-radius: 12px; border: 1px solid var(--accent); 
+        font-weight: bold; font-size: 14px;
+    }
 
-        /* Input e Bottoni */
-        input { width: 80%; padding: 12px; margin: 15px 0; border-radius: 8px; border: none; font-size: 16px; text-align: center; }
-        button { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; text-transform: uppercase; }
-        button:active { transform: scale(0.95); }
+    /* Input migliorati: ora non sono più troppo lunghi */
+    input { 
+        width: 100%; /* Si adatta alla larghezza del box (320px) */
+        box-sizing: border-box; 
+        padding: 12px; margin: 10px 0; 
+        border-radius: 8px; border: 1px solid #444; 
+        background: #252545; color: white;
+        font-size: 16px; text-align: center; 
+    }
+    
+    button { 
+        width: 100%; /* Bottone largo quanto l'input */
+        background: var(--primary); color: white; border: none; 
+        padding: 15px; border-radius: 8px; font-weight: bold; 
+        cursor: pointer; font-size: 16px; text-transform: uppercase; 
+        margin-top: 10px;
+    }
+    
+    button:active { transform: scale(0.95); }
 
-        .hint-text { color: var(--accent); margin-top: 15px; font-style: italic; display: none; }
-        
-        #ar-instruction { position: fixed; bottom: 30px; width: 100%; text-align: center; color: white; z-index: 1000; display: none; text-shadow: 2px 2px 4px black; }
-    </style>
+    .hint-text { color: var(--accent); margin-top: 15px; font-style: italic; display: none; font-size: 14px; }
+    
+    #ar-instruction { 
+        position: fixed; bottom: 30px; width: 100%; text-align: center; 
+        color: white; z-index: 1000; display: none; 
+        text-shadow: 2px 2px 4px black; font-weight: bold;
+    }
+</style>
 </head>
 <body>
 
-    <div id="login-screen" class="overlay">
-        <h1 style="color: var(--primary)">MISSIONE SCIENZA</h1>
-        <p>Inserisci i tuoi dati per iniziare la caccia</p>
+<div id="login-screen" class="overlay">
+    <div class="login-box">
+        <h1>MISSIONE SCIENZA</h1>
+        <p>Inserisci i tuoi dati</p>
         <input type="text" id="nome" placeholder="Nome">
         <input type="text" id="cognome" placeholder="Cognome">
         <button onclick="startGame()">Inizia Gioco</button>
     </div>
-
+</div>
     <div id="quiz-screen" class="overlay" style="display: none;">
         <div class="quiz-container">
             <h2 id="level-title">Livello 1</h2>
