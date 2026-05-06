@@ -2,103 +2,109 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Scienza AR - Caccia al Tesoro</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-   <style>
-    :root {
-        --primary: #00d2ff;
-        --secondary: #00458b;
-        --accent: #f1c40f;
-        --dark: #1a1a2e;
-    }
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --secondary: #00458b;
+            --accent: #f1c40f;
+            --dark: #1a1a2e;
+        }
 
-    body, html { 
-        margin: 0; padding: 0; width: 100%; height: 100%; 
-        overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        background: var(--dark);
-    }
-    
-    /* Fotocamera */
-    video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--dark);
+            position: fixed; /* Previene scroll elastico su iOS */
+        }
+        
+        /* Video della camera sempre sotto */
+        video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
 
-    /* Schermate a tutto schermo (Login e Quiz) */
-    .overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: var(--dark); color: white; display: flex; flex-direction: column;
-        align-items: center; justify-content: center; z-index: 2000; text-align: center;
-    }
+        /* Schermate a tutto schermo (Login e Quiz) */
+        .overlay {
+            position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100dvh; /* Ignora salti da tastiera */
+            background: var(--dark); color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 2000; text-align: center;
+        }
 
-    /* NUOVO: Box specifico per il Login e il Quiz per tenerli centrati e compatti */
-    .login-box, .quiz-container { 
-        background: rgba(255,255,255,0.05); 
-        padding: 30px; 
-        border-radius: 20px; 
-        border: 2px solid var(--primary); 
-        width: 85%; 
-        max-width: 320px; /* Qui blocchiamo la larghezza eccessiva */
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    
-    /* UI di Gioco sopra la camera (Badge Punti/Utente) */
-    #game-ui {
-        position: fixed; top: 20px; width: 100%; z-index: 1000; display: none;
-        justify-content: space-around; pointer-events: none;
-    }
-    .badge { 
-        background: rgba(0,0,0,0.8); color: var(--accent); 
-        padding: 10px 15px; border-radius: 12px; border: 1px solid var(--accent); 
-        font-weight: bold; font-size: 14px;
-    }
+        /* Box Login e Quiz centrati e compatti */
+        .login-box, .quiz-container { 
+            background: rgba(255,255,255,0.05); 
+            padding: 30px; 
+            border-radius: 20px; 
+            border: 2px solid var(--primary); 
+            width: 85%; 
+            max-width: 320px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+        
+        /* UI di Gioco sopra la camera (Badge Punti/Utente) */
+        #game-ui {
+            position: fixed; top: 20px; width: 100%; z-index: 1000; display: none;
+            justify-content: space-around; pointer-events: none;
+        }
+        .badge { 
+            background: rgba(0,0,0,0.8); color: var(--accent); 
+            padding: 10px 15px; border-radius: 12px; border: 1px solid var(--accent); 
+            font-weight: bold; font-size: 14px;
+        }
 
-    /* Input migliorati: ora non sono più troppo lunghi */
-    input { 
-        width: 100%; /* Si adatta alla larghezza del box (320px) */
-        box-sizing: border-box; 
-        padding: 12px; margin: 10px 0; 
-        border-radius: 8px; border: 1px solid #444; 
-        background: #252545; color: white;
-        font-size: 16px; text-align: center; 
-    }
-    
-    button { 
-        width: 100%; /* Bottone largo quanto l'input */
-        background: var(--primary); color: white; border: none; 
-        padding: 15px; border-radius: 8px; font-weight: bold; 
-        cursor: pointer; font-size: 16px; text-transform: uppercase; 
-        margin-top: 10px;
-    }
-    
-    button:active { transform: scale(0.95); }
+        /* Input migliorati per schermi touch */
+        input { 
+            width: 100%; 
+            height: 50px;
+            box-sizing: border-box; 
+            padding: 0 15px; margin: 10px 0; 
+            border-radius: 8px; border: 1px solid #444; 
+            background: #252545; color: white;
+            font-size: 16px; /* Evita zoom automatico su iPhone */
+            text-align: center; 
+        }
+        
+        button { 
+            width: 100%; height: 55px;
+            background: var(--primary); color: white; border: none; 
+            border-radius: 8px; font-weight: bold; 
+            cursor: pointer; font-size: 16px; text-transform: uppercase; 
+            margin-top: 10px; letter-spacing: 1px;
+        }
+        
+        button:active { transform: scale(0.95); }
 
-    .hint-text { color: var(--accent); margin-top: 15px; font-style: italic; display: none; font-size: 14px; }
-    
-    #ar-instruction { 
-        position: fixed; bottom: 30px; width: 100%; text-align: center; 
-        color: white; z-index: 1000; display: none; 
-        text-shadow: 2px 2px 4px black; font-weight: bold;
-    }
-</style>
+        .hint-text { color: var(--accent); margin-top: 15px; font-style: italic; display: none; font-size: 14px; }
+        
+        #ar-instruction { 
+            position: fixed; bottom: 30px; width: 100%; text-align: center; 
+            color: white; z-index: 1000; display: none; 
+            text-shadow: 2px 2px 4px black; font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
-<div id="login-screen" class="overlay">
-    <div class="login-box">
-        <h1>MISSIONE SCIENZA</h1>
-        <p>Inserisci i tuoi dati</p>
-        <input type="text" id="nome" placeholder="Nome">
-        <input type="text" id="cognome" placeholder="Cognome">
-        <button onclick="startGame()">Inizia Gioco</button>
+    <div id="login-screen" class="overlay">
+        <div class="login-box">
+            <h1 style="color:var(--primary); margin:0 0 10px 0; font-size:22px;">MISSIONE SCIENZA</h1>
+            <p style="color:#aaa; font-size:14px; margin-bottom:25px;">Inserisci i tuoi dati</p>
+            <input type="text" id="nome" placeholder="Nome" autocomplete="off" spellcheck="false">
+            <input type="text" id="cognome" placeholder="Cognome" autocomplete="off" spellcheck="false">
+            <button onclick="startGame()">Inizia Gioco</button>
+        </div>
     </div>
-</div>
+
     <div id="quiz-screen" class="overlay" style="display: none;">
         <div class="quiz-container">
-            <h2 id="level-title">Livello 1</h2>
+            <h2 id="level-title" style="color:var(--primary); margin-top:0;">Livello 1</h2>
             <p id="question-text">Domanda...</p>
-            <input type="text" id="answer-input" placeholder="Tua risposta">
+            <input type="text" id="answer-input" placeholder="Tua risposta" autocomplete="off" spellcheck="false">
             <button onclick="checkAnswer()">Verifica</button>
             <div id="hint-box" class="hint-text"></div>
             <button id="btn-ar" onclick="activateAR()" style="display: none; background: #27ae60; margin-top: 15px;">Attiva Scanner AR</button>
@@ -118,14 +124,7 @@
              cursor="rayOrigin: mouse" 
              raycaster="objects: .clickable">
         
-        <a-marker type="pattern" url="marker1.patt">
-            <a-marker type="pattern" url="marker2.patt">
-                <a-marker type="pattern" url="marker3.patt">
-                    <a-marker type="pattern" url="marker4.patt">
-                        <a-marker type="pattern" url="marker5.patt">
-                            <a-marker type="pattern" url="marker6.patt">
-                                <a-marker type="pattern" url="marker7.patt">
-                                    <a-marker type="pattern" url="marker8.patt">
+        <a-marker preset="hiro" id="main-marker">
             <a-entity id="ar-object"
                       class="clickable"
                       premio-cliccabile
@@ -140,33 +139,67 @@
     </a-scene>
 
     <script>
-        // DATI DEL GIOCO: 8 LIVELLI
-       const gameData = [
-    { 
-        questions: [
-            { q: "Qual è la formula chimica dell'acqua?", a: "h2o" },
-            { q: "A che temperatura bolle l'acqua (gradi Celsius)?", a: "100" },
-            { q: "L'acqua è un solvente universale? (si/no)", a: "si" }
-        ],
-        hint: "Cerca dove l'acqua scorre (vicino a un lavandino)", 
-        color: "#00d2ff" 
-    },
-    { 
-        questions: [
-            { q: "Cosa significa l'acronimo DNA?", a: "acido desossiribonucleico" },
-            { q: "Quante eliche ha il DNA?", a: "2" }
-        ],
-        hint: "Cerca tra i libri di biologia", 
-        color: "#ff4757" 
-    }
-    // ... continua per gli altri oggetti seguendo questo schema
-];
+        // DATI DEL GIOCO: 8 LIVELLI CON SOTTO-DOMANDE
+        const gameData = [
+            { 
+                questions: [
+                    { q: "Qual è la formula chimica dell'acqua?", a: "h2o" },
+                    { q: "A che temperatura bolle l'acqua (gradi Celsius)?", a: "100" },
+                    { q: "L'acqua è un solvente universale? (si/no)", a: "si" }
+                ],
+                hint: "Cerca dove l'acqua scorre (vicino a un lavandino)", color: "#00d2ff" 
+            },
+            { 
+                questions: [
+                    { q: "Cosa significa l'acronimo DNA?", a: "acido desossiribonucleico" },
+                    { q: "Quante eliche ha il DNA?", a: "2" }
+                ],
+                hint: "Cerca tra i libri di biologia", color: "#ff4757" 
+            },
+            { 
+                questions: [
+                    { q: "Qual è la particella con carica negativa dell'atomo?", a: "elettrone" }
+                ],
+                hint: "Cerca vicino a una fonte di elettricità", color: "#2ed573" 
+            },
+            { 
+                questions: [
+                    { q: "Chi osservò per primo le cellule al microscopio?", a: "hooke" }
+                ],
+                hint: "Cerca dove c'è molta luce", color: "#eccc68" 
+            },
+            { 
+                questions: [
+                    { q: "Passaggio da liquido a gassoso?", a: "evaporazione" }
+                ],
+                hint: "Cerca in cucina vicino ai fornelli", color: "#ffa502" 
+            },
+            { 
+                questions: [
+                    { q: "Il pianeta più grande del sistema solare?", a: "giove" }
+                ],
+                hint: "Cerca verso l'alto (finestra)", color: "#ff6b81" 
+            },
+            { 
+                questions: [
+                    { q: "Unità di misura della tensione elettrica?", a: "volt" }
+                ],
+                hint: "Cerca vicino a una presa di corrente", color: "#747d8c" 
+            },
+            { 
+                questions: [
+                    { q: "La forza che attira tutto verso il centro della Terra?", a: "gravità" }
+                ],
+                hint: "Cerca l'oggetto caduto sul pavimento", color: "#5352ed" 
+            }
+        ];
 
-let currentLevel = 0;      // L'oggetto che stiamo cercando (1 di 8)
-let currentSubQuestion = 0; // La domanda specifica dell'oggetto (1 di 3)
-let score = 0;
+        let currentLevel = 0;      
+        let currentSubQuestion = 0; 
+        let score = 0;
+        let user = "";
 
-        // Componente A-Frame per il tocco
+        // Componente A-Frame per il tocco dell'oggetto 3D
         AFRAME.registerComponent('premio-cliccabile', {
             init: function () {
                 this.el.addEventListener('click', () => {
@@ -178,8 +211,8 @@ let score = 0;
         });
 
         function startGame() {
-            const nome = document.getElementById('nome').value;
-            const cognome = document.getElementById('cognome').value;
+            const nome = document.getElementById('nome').value.trim();
+            const cognome = document.getElementById('cognome').value.trim();
             if(!nome || !cognome) return alert("Inserisci nome e cognome!");
             
             user = nome + " " + cognome;
@@ -188,52 +221,48 @@ let score = 0;
             loadLevel();
         }
 
-    function loadLevel() {
-        if(currentLevel >= gameData.length) {
-        alert("CONGRATULAZIONI! Hai completato la caccia!");
-        location.reload();
-        return;
+        function loadLevel() {
+            if(currentLevel >= gameData.length) {
+                alert("CONGRATULAZIONI " + user + "! Hai completato la caccia con " + score + " punti!");
+                location.reload();
+                return;
+            }
+            
+            document.getElementById('quiz-screen').style.display = 'flex';
+            document.getElementById('game-ui').style.display = 'none';
+            document.getElementById('ar-instruction').style.display = 'none';
+            
+            const levelData = gameData[currentLevel];
+            const totalSub = levelData.questions.length;
+            
+            document.getElementById('level-title').innerText = `Oggetto ${currentLevel + 1} - Domanda ${currentSubQuestion + 1}/${totalSub}`;
+            document.getElementById('question-text').innerText = levelData.questions[currentSubQuestion].q;
+            
+            document.getElementById('answer-input').value = "";
+            document.getElementById('hint-box').style.display = 'none';
+            document.getElementById('btn-ar').style.display = 'none';
         }
-    
-        document.getElementById('quiz-screen').style.display = 'flex';
-        document.getElementById('game-ui').style.display = 'none';
-         document.getElementById('ar-instruction').style.display = 'none';
-    
-          // Recuperiamo la domanda attuale dal nuovo schema
-        const levelData = gameData[currentLevel];
-        const totalSub = levelData.questions.length;
-    
-        document.getElementById('level-title').innerText = `Oggetto ${currentLevel + 1} - Domanda ${currentSubQuestion + 1}/${totalSub}`;
-        document.getElementById('question-text').innerText = levelData.questions[currentSubQuestion].q;
-    
-        document.getElementById('answer-input').value = "";
-        document.getElementById('hint-box').style.display = 'none';
-        document.getElementById('btn-ar').style.display = 'none';
-    }
 
-function checkAnswer() {
-    const ans = document.getElementById('answer-input').value.toLowerCase().trim();
-    const levelData = gameData[currentLevel];
-    const correctAnswer = levelData.questions[currentSubQuestion].a;
+        function checkAnswer() {
+            const ans = document.getElementById('answer-input').value.toLowerCase().trim();
+            const levelData = gameData[currentLevel];
+            const correctAnswer = levelData.questions[currentSubQuestion].a;
 
-    if(ans === correctAnswer) {
-        // È l'ultima domanda per questo oggetto?
-        if (currentSubQuestion < levelData.questions.length - 1) {
-            currentSubQuestion++; // Passa alla prossima domanda
-            alert("Esatto! Prossima domanda...");
-            loadLevel();
-        } else {
-            // Tutte le domande fatte! Sblocca AR
-            document.getElementById('hint-box').innerText = "OTTIMO! Hai sbloccato l'indizio: " + levelData.hint;
-            document.getElementById('hint-box').style.display = 'block';
-            document.getElementById('btn-ar').style.display = 'block';
-            // Resettiamo il contatore delle sotto-domande per il prossimo oggetto
-            currentSubQuestion = 0; 
+            if(ans === correctAnswer) {
+                if (currentSubQuestion < levelData.questions.length - 1) {
+                    currentSubQuestion++; 
+                    alert("Esatto! Prossima domanda...");
+                    loadLevel();
+                } else {
+                    document.getElementById('hint-box').innerText = "OTTIMO! Hai sbloccato l'indizio: " + levelData.hint;
+                    document.getElementById('hint-box').style.display = 'block';
+                    document.getElementById('btn-ar').style.display = 'block';
+                    currentSubQuestion = 0; 
+                }
+            } else {
+                alert("Risposta errata! Riprova.");
+            }
         }
-    } else {
-        alert("Risposta errata! Riprova.");
-    }
-}
 
         function activateAR() {
             document.getElementById('quiz-screen').style.display = 'none';
@@ -241,7 +270,7 @@ function checkAnswer() {
             document.getElementById('ar-instruction').style.display = 'block';
             document.body.style.background = "transparent";
 
-            // Cambia colore all'oggetto AR in base al livello
+            // Cambia colore al cubo in base al livello attuale
             document.getElementById('visual-box').setAttribute('material', 'color', gameData[currentLevel].color);
             
             window.dispatchEvent(new Event('resize'));
@@ -250,7 +279,7 @@ function checkAnswer() {
         function foundObject() {
             score += 100;
             document.getElementById('ui-score').innerText = score;
-            alert("Ottimo! Hai trovato l'oggetto del livello " + (currentLevel + 1));
+            alert("Ottimo! Hai trovato l'oggetto dell'Oggetto " + (currentLevel + 1));
             currentLevel++;
             loadLevel();
         }
