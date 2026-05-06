@@ -3,75 +3,118 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Scienza - Fix Trasparenza</title>
+    <title>Caccia al Tesoro AR - Marker</title>
+    
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <style>
-        /* Forza tutto a essere trasparente */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent !important; }
-        
-        #ui { position: fixed; top: 10px; width: 100%; z-index: 1000; display: none; justify-content: space-around; pointer-events: none; }
-        .stat { background: rgba(0,0,0,0.8); color: cyan; padding: 10px; border-radius: 8px; font-family: monospace; border: 1px solid cyan; }
-        
-        #start-btn { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px 40px; font-size: 20px; z-index: 2000; background: cyan; border: none; font-weight: bold; border-radius: 10px; }
 
-        /* Assicura che il video creato da AR.js non sia nascosto */
-        video {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            z-index: -1 !important;
+    <style>
+        body, html { margin: 0; padding: 0; overflow: hidden; background: transparent !important; font-family: sans-serif; }
+        video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
+        
+        /* UI del Quiz */
+        #quiz-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2c3e50; color: white; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 2000; text-align: center; padding: 20px;
         }
+
+        /* UI in AR */
+        #ar-ui {
+            position: fixed; top: 10px; width: 100%; z-index: 1000; display: none; 
+            justify-content: space-around; pointer-events: none;
+        }
+        .stat { background: rgba(0,0,0,0.8); color: #f1c40f; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; }
+        
+        input { padding: 10px; font-size: 16px; margin: 10px 0; width: 80%; max-width: 300px; border-radius: 5px; border: none; text-align: center; }
+        button { padding: 15px 30px; font-size: 18px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     </style>
+
+    <script>
+        // COMPONENTE: Gestisce il tocco sull'oggetto
+        AFRAME.registerComponent('premio-cliccabile', {
+            init: function () {
+                this.el.addEventListener('click', () => {
+                    alert('🎉 OGGETTO TROVATO! +100 PUNTI!');
+                    
+                    // Aggiorna punteggio
+                    let scoreSpan = document.getElementById('score');
+                    scoreSpan.innerText = parseInt(scoreSpan.innerText) + 100;
+                    
+                    // Fa sparire l'oggetto dopo averlo toccato
+                    this.el.setAttribute('visible', 'false');
+
+                    // Opzionale: Torna al quiz dopo 2 secondi per la prossima domanda
+                    setTimeout(() => {
+                        alert("Preparati per il prossimo indizio!");
+                        // Qui potresti ricaricare l'interfaccia del quiz per la domanda 2
+                    }, 2000);
+                });
+            }
+        });
+    </script>
 </head>
 
-<body style="margin: 0px; overflow: hidden; background-color: transparent;">
+<body>
 
-    <button id="start-btn" onclick="start()">AVVIA CAMERA</button>
+    <div id="quiz-screen">
+        <h2>Domanda 1</h2>
+        <p>Qual è la molecola dell'acqua?</p>
+        <input type="text" id="risposta" placeholder="Es: CO2">
+        <button onclick="controllaRisposta()">CONFERMA</button>
+        
+        <div id="indizio" style="display: none; margin-top: 20px; color: #f1c40f;">
+            <p><strong>Corretto!</strong></p>
+            <p>Indizio: Vai in cucina e inquadra il simbolo magico (Hiro) sul tavolo.</p>
+            <button onclick="avviaAR()" style="background: #e67e22;">ATTIVA SCANNER AR</button>
+        </div>
+    </div>
 
-    <div id="ui">
-        <div class="stat">PUNTI: <span id="s">0</span></div>
-        <div class="stat">TEMPO: <span id="t">60:00</span></div>
+    <div id="ar-ui">
+        <div class="stat">PUNTI: <span id="score">0</span></div>
     </div>
 
     <a-scene embedded 
-             arjs='sourceType: webcam; debugUIEnabled: false;' 
+             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
              renderer="alpha: true; antialias: true;"
-             style="background: transparent !important;">
+             vr-mode-ui="enabled: false"
+             cursor="rayOrigin: mouse" 
+             raycaster="objects: .interattivo">
         
-        <a-entity position="0 0 -3">
-            <a-box material="color: red; opacity: 0.9;" 
+        <a-marker preset="hiro">
+            
+            <a-box class="interattivo" premio-cliccabile
+                   position="0 0.5 0" 
+                   material="color: gold; opacity: 0.9;" 
                    animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
             </a-box>
-        </a-entity>
+            
+        </a-marker>
 
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        function start() {
-            document.getElementById('start-btn').style.display = 'none';
-            document.getElementById('ui').style.display = 'flex';
-            
-            // Forza la trasparenza del background del browser
+        function controllaRisposta() {
+            let risposta = document.getElementById('risposta').value.toLowerCase().trim();
+            if (risposta === 'h2o') {
+                document.getElementById('indizio').style.display = 'block';
+            } else {
+                alert('Risposta errata, scienziato! Riprova.');
+            }
+        }
+
+        function avviaAR() {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('ar-ui').style.display = 'flex';
             document.body.style.backgroundColor = "transparent";
 
-            // Forza il video a riprodursi e stare dietro
+            // Forza l'avvio della camera e risolve i problemi grafici
             const video = document.querySelector('video');
-            if (video) {
-                video.play();
-                video.style.zIndex = "-1";
+            if (video) { 
+                video.play(); 
+                video.style.zIndex = "-1"; 
             }
-
-            // Timer
-            let sec = 3600;
-            setInterval(() => {
-                sec--;
-                let m = Math.floor(sec/60), s = sec%60;
-                document.getElementById('t').innerText = `${m}:${s<10?'0':''}${s}`;
-            }, 1000);
-
-            // Importante: aggiorna le dimensioni per allineare tutto
             window.dispatchEvent(new Event('resize'));
         }
     </script>
