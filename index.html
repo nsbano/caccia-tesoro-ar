@@ -46,15 +46,29 @@
             flex-shrink: 0;
         }
         
-        /* UI di Gioco sopra la camera (Badge Punti/Utente) */
+      /* UI di Gioco sopra la camera (Badge Punti/Utente) */
         #game-ui {
-            position: fixed; top: 20px; width: 100%; z-index: 1000; display: none;
-            justify-content: space-around; pointer-events: none;
+            position: fixed; 
+            /* env() evita che la tacca del telefono copra i contatori */
+            top: max(25px, env(safe-area-inset-top)); 
+            left: 5%;  /* Stacca i margini dai bordi laterali */
+            width: 90%; 
+            z-index: 9999; /* Assicura che sia sempre in primissimo piano */
+            display: none;
+            justify-content: space-between; /* Spinge i badge ai due lati opposti */
+            pointer-events: none;
+            box-sizing: border-box;
         }
+
         .badge { 
-            background: rgba(0,0,0,0.8); color: var(--accent); 
-            padding: 10px 15px; border-radius: 12px; border: 1px solid var(--accent); 
-            font-weight: bold; font-size: 14px;
+            background: rgba(0,0,0,0.85); 
+            color: var(--accent); 
+            padding: 8px 15px; 
+            border-radius: 12px; 
+            border: 1px solid var(--accent); 
+            font-weight: bold; 
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); /* Aggiunge stacco visivo */
         }
 
         /* Input migliorati per schermi touch */
@@ -81,10 +95,26 @@
 
         .hint-text { color: var(--accent); margin-top: 15px; font-style: italic; display: none; font-size: 14px; }
         
+       /* Istruzioni in basso nella schermata AR */
         #ar-instruction { 
-            position: fixed; bottom: 30px; width: 100%; text-align: center; 
-            color: white; z-index: 1000; display: none; 
-            text-shadow: 2px 2px 4px black; font-weight: bold;
+            position: fixed; 
+            /* Evita la barra di scorrimento inferiore di iPhone/Android */
+            bottom: max(35px, env(safe-area-inset-bottom)); 
+            left: 5%; 
+            width: 90%; 
+            text-align: center; 
+            color: white; 
+            z-index: 9999; 
+            display: none; 
+            font-weight: bold;
+            font-size: 16px;
+            /* Uno sfondo semi-trasparente per renderlo sempre leggibile sulla camera */
+            background: rgba(0,0,0,0.6); 
+            padding: 12px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
