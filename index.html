@@ -361,6 +361,19 @@
             currentLevel++;
             loadLevel();
         }
+        window.onload = function() {
+    const markers = document.querySelectorAll('a-marker');
+    markers.forEach((m) => {
+        m.addEventListener('markerFound', () => {
+            console.log("Marcatore trovato: " + m.id);
+            // Questo alert ti conferma che il file .patt è corretto
+            alert("SISTEMA: Ho riconosciuto il marcatore " + m.id + "! Se non vedi il cubo, controlla le luci.");
+        });
+        m.addEventListener('markerLost', () => {
+            console.log("Marcatore perso: " + m.id);
+        });
+    });
+}
     </script>
 </body>
 </html>
