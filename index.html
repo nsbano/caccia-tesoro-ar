@@ -148,63 +148,30 @@
     <div id="ar-instruction">Inquadra il marcatore per trovare l'oggetto!</div>
 
 <a-scene embedded 
-             arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5;" 
-             renderer="alpha: true; antialias: true; preserveDrawingBuffer: true;"
-             vr-mode-ui="enabled: false"
-             cursor="rayOrigin: mouse" 
-             raycaster="objects: .clickable">
+         arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5;" 
+         renderer="alpha: true; antialias: true; preserveDrawingBuffer: true;"
+         vr-mode-ui="enabled: false">
         
-       <a-marker type="pattern" url="pattern-marker2.patt" id="marker-1">
-            <a-entity class="clickable" premio-cliccabile position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-                <a-box class="visual-box" material="color: #00d2ff; opacity: 0.9;"></a-box>
-            </a-entity>
-        </a-marker>
+    <a-marker type="pattern" url="marker2.patt" id="marker-0">
+        <a-entity position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
+            <a-box material="color: #00d2ff; opacity: 0.9;"></a-box>
+        </a-entity>
+    </a-marker>
 
-        <a-marker type="pattern" url="marker2.patt" id="marker-1">
-            <a-entity class="clickable" premio-cliccabile position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-                <a-box class="visual-box" material="color: #ff4757; opacity: 0.9;"></a-box>
-            </a-entity>
-        </a-marker>
+    <a-marker type="pattern" url="marker3.patt" id="marker-1">
+        <a-entity position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
+            <a-box material="color: #ff4757; opacity: 0.9;"></a-box>
+        </a-entity>
+    </a-marker>
 
-        <a-marker type="pattern" url="marker3.patt" id="marker-2">
-            <a-entity class="clickable" premio-cliccabile position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-                <a-box class="visual-box" material="color: #2ed573; opacity: 0.9;"></a-box>
-            </a-entity>
-        </a-marker>
+    <a-marker type="pattern" url="marker4.patt" id="marker-2">
+        <a-entity position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
+            <a-box material="color: #2ed573; opacity: 0.9;"></a-box>
+        </a-entity>
+    </a-marker>
 
-        <a-marker type="pattern" url="marker4.patt" id="marker-3">
-            <a-entity class="clickable" premio-cliccabile position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-                <a-box class="visual-box" material="color: #eccc68; opacity: 0.9;"></a-box>
-            </a-entity>
-        </a-marker>
-
-        <a-marker type="pattern" url="marker5.patt" id="marker-4">
-            <a-entity class="clickable" premio-cliccabile position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-                <a-box class="visual-box" material="color: #ffa502; opacity: 0.9;"></a-box>
-            </a-entity>
-        </a-marker>
-
-        <a-marker type="pattern" url="marker6.patt" id="marker-5">
-            <a-entity class="clickable" premio-cliccabile position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-                <a-box class="visual-box" material="color: #ff6b81; opacity: 0.9;"></a-box>
-            </a-entity>
-        </a-marker>
-
-        <a-marker type="pattern" url="marker7.patt" id="marker-6">
-            <a-entity class="clickable" premio-cliccabile position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-                <a-box class="visual-box" material="color: #747d8c; opacity: 0.9;"></a-box>
-            </a-entity>
-        </a-marker>
-
-        <a-marker type="pattern" url="marker8.patt" id="marker-7">
-            <a-entity class="clickable" premio-cliccabile position="0 0.5 0" scale="0.5 0.5 0.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
-                <a-box class="visual-box" material="color: #5352ed; opacity: 0.9;"></a-box>
-            </a-entity>
-        </a-marker>
-
-        <a-entity camera></a-entity>
-    </a-scene>
-
+    <a-entity camera></a-entity>
+</a-scene>
     <script>
         // DATI DEL GIOCO: 8 LIVELLI CON SOTTO-DOMANDE
         const gameData = [
@@ -261,117 +228,82 @@
             }
         ];
 
-        let currentLevel = 0;      
-        let currentSubQuestion = 0; 
-        let score = 0;
-        let user = "";
+let currentSubQuestion = 0; 
+    let score = 0;
+    let user = "";
 
-  // Componente A-Frame per il tocco dell'oggetto 3D
-        AFRAME.registerComponent('premio-cliccabile', {
-            init: function () {
-                this.el.addEventListener('click', (evento) => {
-                    if(document.getElementById('ar-instruction').style.display === 'block') {
-                        
-                        // Controlliamo in quale marcatore si trova l'oggetto cliccato
-                        const markerCliccato = this.el.parentNode.id;
-                        const markerCorretto = "marker-" + currentLevel;
+    function startGame() {
+        const nome = document.getElementById('nome').value.trim();
+        const cognome = document.getElementById('cognome').value.trim();
+        if(!nome || !cognome) return alert("Inserisci nome e cognome!");
+        user = nome + " " + cognome;
+        document.getElementById('ui-user').innerText = user;
+        document.getElementById('login-screen').style.display = 'none';
+        loadLevel();
+    }
 
-                        // Se l'utente inquadra il marcatore del livello giusto...
-                        if (markerCliccato === markerCorretto) {
-                            foundObject();
-                        } else {
-                            // Se inquadra un marcatore di un altro livello
-                            alert("Hai trovato un oggetto, ma non è quello giusto per questo livello! Segui l'indizio.");
-                        }
+    function loadLevel() {
+        if(currentLevel >= gameData.length) {
+            alert("CONGRATULAZIONI " + user + "! Punti totali: " + score);
+            location.reload();
+            return;
+        }
+        document.getElementById('quiz-screen').style.display = 'flex';
+        document.getElementById('game-ui').style.display = 'none';
+        document.getElementById('ar-instruction').style.display = 'none';
+        const levelData = gameData[currentLevel];
+        document.getElementById('level-title').innerText = `Oggetto ${currentLevel + 1}`;
+        document.getElementById('question-text').innerText = levelData.questions[currentSubQuestion].q;
+        document.getElementById('answer-input').value = "";
+        document.getElementById('btn-ar').style.display = 'none';
+    }
+
+    function checkAnswer() {
+        const ans = document.getElementById('answer-input').value.toLowerCase().trim();
+        const levelData = gameData[currentLevel];
+        if(ans === levelData.questions[currentSubQuestion].a) {
+            if (currentSubQuestion < levelData.questions.length - 1) {
+                currentSubQuestion++; 
+                loadLevel();
+            } else {
+                document.getElementById('hint-box').innerText = "INDIZIO: " + levelData.hint;
+                document.getElementById('hint-box').style.display = 'block';
+                document.getElementById('btn-ar').style.display = 'block';
+            }
+        } else { alert("Riprova!"); }
+    }
+
+    function activateAR() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('game-ui').style.display = 'flex';
+        document.getElementById('ar-instruction').style.display = 'block';
+    }
+
+    function foundObject() {
+        score += 100;
+        document.getElementById('ui-score').innerText = score;
+        alert("Punti assegnati! Passiamo al prossimo livello.");
+        currentLevel++;
+        currentSubQuestion = 0;
+        loadLevel();
+    }
+
+    // LOGICA DI RICONOSCIMENTO AUTOMATICO
+    window.onload = function() {
+        const scene = document.querySelector('a-scene');
+        scene.addEventListener('loaded', () => {
+            const markers = document.querySelectorAll('a-marker');
+            markers.forEach((m) => {
+                m.addEventListener('markerFound', () => {
+                    // Controlla se il marcatore inquadrato è quello del livello attuale
+                    const markerGiusto = "marker-" + currentLevel;
+                    if(m.id === markerGiusto && document.getElementById('ar-instruction').style.display === 'block') {
+                        foundObject();
                     }
                 });
-            }
+            });
         });
-
-        function startGame() {
-            const nome = document.getElementById('nome').value.trim();
-            const cognome = document.getElementById('cognome').value.trim();
-            if(!nome || !cognome) return alert("Inserisci nome e cognome!");
-            
-            user = nome + " " + cognome;
-            document.getElementById('ui-user').innerText = user;
-            document.getElementById('login-screen').style.display = 'none';
-            loadLevel();
-        }
-
-        function loadLevel() {
-            if(currentLevel >= gameData.length) {
-                alert("CONGRATULAZIONI " + user + "! Hai completato la caccia con " + score + " punti!");
-                location.reload();
-                return;
-            }
-            
-            document.getElementById('quiz-screen').style.display = 'flex';
-            document.getElementById('game-ui').style.display = 'none';
-            document.getElementById('ar-instruction').style.display = 'none';
-            
-            const levelData = gameData[currentLevel];
-            const totalSub = levelData.questions.length;
-            
-            document.getElementById('level-title').innerText = `Oggetto ${currentLevel + 1} - Domanda ${currentSubQuestion + 1}/${totalSub}`;
-            document.getElementById('question-text').innerText = levelData.questions[currentSubQuestion].q;
-            
-            document.getElementById('answer-input').value = "";
-            document.getElementById('hint-box').style.display = 'none';
-            document.getElementById('btn-ar').style.display = 'none';
-        }
-
-        function checkAnswer() {
-            const ans = document.getElementById('answer-input').value.toLowerCase().trim();
-            const levelData = gameData[currentLevel];
-            const correctAnswer = levelData.questions[currentSubQuestion].a;
-
-            if(ans === correctAnswer) {
-                if (currentSubQuestion < levelData.questions.length - 1) {
-                    currentSubQuestion++; 
-                    alert("Esatto! Prossima domanda...");
-                    loadLevel();
-                } else {
-                    document.getElementById('hint-box').innerText = "OTTIMO! Hai sbloccato l'indizio: " + levelData.hint;
-                    document.getElementById('hint-box').style.display = 'block';
-                    document.getElementById('btn-ar').style.display = 'block';
-                    currentSubQuestion = 0; 
-                }
-            } else {
-                alert("Risposta errata! Riprova.");
-            }
-        }
-
-        function activateAR() {
-            document.getElementById('quiz-screen').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'flex';
-            document.getElementById('ar-instruction').style.display = 'block';
-            document.body.style.background = "transparent";
-
-            // Cambia colore al cubo in base al livello attuale
-           
-            
-            window.dispatchEvent(new Event('resize'));
-        }
-
-        function foundObject() {
-            score += 100;
-            document.getElementById('ui-score').innerText = score;
-            alert("Ottimo! Hai trovato l'oggetto dell'Oggetto " + (currentLevel + 1));
-            currentLevel++;
-            loadLevel();
-        }
-        window.onload = function() {
- document.querySelector('a-scene').addEventListener('loaded', function () {
-    console.log("Scena A-Frame pronta!");
-    const markers = document.querySelectorAll('a-marker');
-    markers.forEach((m) => {
-        m.addEventListener('markerFound', () => {
-            alert("MARCATORE RICONOSCIUTO: " + m.id);
-        });
-    });
-});
-}
-    </script>
+    }
+</script>
 </body>
 </html>
