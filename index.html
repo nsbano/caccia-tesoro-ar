@@ -173,137 +173,130 @@
     <a-entity camera></a-entity>
 </a-scene>
     <script>
-        // DATI DEL GIOCO: 8 LIVELLI CON SOTTO-DOMANDE
-        const gameData = [
-            { 
-                questions: [
-                    { q: "Qual è la formula chimica dell'acqua?", a: "h2o" },
-                    { q: "A che temperatura bolle l'acqua (gradi Celsius)?", a: "100" },
-                    { q: "L'acqua è un solvente universale? (si/no)", a: "si" }
-                ],
-                hint: "Cerca dove l'acqua scorre (vicino a un lavandino)", color: "#00d2ff" 
-            },
-            { 
-                questions: [
-                    { q: "Cosa significa l'acronimo DNA?", a: "acido desossiribonucleico" },
-                    { q: "Quante eliche ha il DNA?", a: "2" }
-                ],
-                hint: "Cerca tra i libri di biologia", color: "#ff4757" 
-            },
-            { 
-                questions: [
-                    { q: "Qual è la particella con carica negativa dell'atomo?", a: "elettrone" }
-                ],
-                hint: "Cerca vicino a una fonte di elettricità", color: "#2ed573" 
-            },
-            { 
-                questions: [
-                    { q: "Chi osservò per primo le cellule al microscopio?", a: "hooke" }
-                ],
-                hint: "Cerca dove c'è molta luce", color: "#eccc68" 
-            },
-            { 
-                questions: [
-                    { q: "Passaggio da liquido a gassoso?", a: "evaporazione" }
-                ],
-                hint: "Cerca in cucina vicino ai fornelli", color: "#ffa502" 
-            },
-            { 
-                questions: [
-                    { q: "Il pianeta più grande del sistema solare?", a: "giove" }
-                ],
-                hint: "Cerca verso l'alto (finestra)", color: "#ff6b81" 
-            },
-            { 
-                questions: [
-                    { q: "Unità di misura della tensione elettrica?", a: "volt" }
-                ],
-                hint: "Cerca vicino a una presa di corrente", color: "#747d8c" 
-            },
-            { 
-                questions: [
-                    { q: "La forza che attira tutto verso il centro della Terra?", a: "gravità" }
-                ],
-                hint: "Cerca l'oggetto caduto sul pavimento", color: "#5352ed" 
-            }
-        ];
-
+     // 1. DEFINIZIONE VARIABILI GLOBALI (Fondamentale!)
+let currentLevel = 0;      
 let currentSubQuestion = 0; 
-    let score = 0;
-    let user = "";
+let score = 0;
+let user = "";
 
-    function startGame() {
-        const nome = document.getElementById('nome').value.trim();
-        const cognome = document.getElementById('cognome').value.trim();
-        if(!nome || !cognome) return alert("Inserisci nome e cognome!");
-        user = nome + " " + cognome;
-        document.getElementById('ui-user').innerText = user;
-        document.getElementById('login-screen').style.display = 'none';
-        loadLevel();
+// 2. DATI DEL GIOCO
+const gameData = [
+    { 
+        questions: [
+            { q: "Qual è la formula chimica dell'acqua?", a: "h2o" },
+            { q: "A che temperatura bolle l'acqua (gradi Celsius)?", a: "100" },
+            { q: "L'acqua è un solvente universale? (si/no)", a: "si" }
+        ],
+        hint: "Cerca dove l'acqua scorre (vicino a un lavandino)"
+    },
+    { 
+        questions: [
+            { q: "Cosa significa l'acronimo DNA?", a: "acido desossiribonucleico" },
+            { q: "Quante eliche ha il DNA?", a: "2" }
+        ],
+        hint: "Cerca tra i libri di biologia"
+    },
+    { 
+        questions: [
+            { q: "Qual è la particella con carica negativa dell'atomo?", a: "elettrone" }
+        ],
+        hint: "Cerca vicino a una fonte di elettricità"
     }
+    // Aggiungi qui gli altri livelli seguendo lo stesso schema...
+];
 
-    function loadLevel() {
-        if(currentLevel >= gameData.length) {
-            alert("CONGRATULAZIONI " + user + "! Punti totali: " + score);
-            location.reload();
-            return;
+// 3. FUNZIONI DI LOGICA
+function startGame() {
+    const nome = document.getElementById('nome').value.trim();
+    const cognome = document.getElementById('cognome').value.trim();
+    if(!nome || !cognome) return alert("Inserisci nome e cognome!");
+    
+    user = nome + " " + cognome;
+    document.getElementById('ui-user').innerText = user;
+    document.getElementById('login-screen').style.display = 'none';
+    loadLevel();
+}
+
+function loadLevel() {
+    // Controllo fine gioco
+    if(currentLevel >= gameData.length) {
+        alert("CONGRATULAZIONI " + user + "! Hai completato la sfida con " + score + " punti!");
+        location.reload();
+        return;
+    }
+    
+    // Mostra quiz, nascondi AR
+    document.getElementById('quiz-screen').style.display = 'flex';
+    document.getElementById('game-ui').style.display = 'none';
+    document.getElementById('ar-instruction').style.display = 'none';
+    document.getElementById('hint-box').style.display = 'none';
+    document.getElementById('btn-ar').style.display = 'none';
+    
+    const levelData = gameData[currentLevel];
+    const totalSub = levelData.questions.length;
+    
+    document.getElementById('level-title').innerText = `Oggetto ${currentLevel + 1} - Domanda ${currentSubQuestion + 1}/${totalSub}`;
+    document.getElementById('question-text').innerText = levelData.questions[currentSubQuestion].q;
+    document.getElementById('answer-input').value = "";
+}
+
+function checkAnswer() {
+    const ans = document.getElementById('answer-input').value.toLowerCase().trim();
+    const levelData = gameData[currentLevel];
+    const correctAnswer = levelData.questions[currentSubQuestion].a;
+
+    if(ans === correctAnswer) {
+        if (currentSubQuestion < levelData.questions.length - 1) {
+            currentSubQuestion++; 
+            alert("Esatto! Prossima domanda...");
+            loadLevel();
+        } else {
+            // Fine domande del livello: sblocca AR
+            document.getElementById('hint-box').innerText = "OTTIMO! Indizio: " + levelData.hint;
+            document.getElementById('hint-box').style.display = 'block';
+            document.getElementById('btn-ar').style.display = 'block';
         }
-        document.getElementById('quiz-screen').style.display = 'flex';
-        document.getElementById('game-ui').style.display = 'none';
-        document.getElementById('ar-instruction').style.display = 'none';
-        const levelData = gameData[currentLevel];
-        document.getElementById('level-title').innerText = `Oggetto ${currentLevel + 1}`;
-        document.getElementById('question-text').innerText = levelData.questions[currentSubQuestion].q;
-        document.getElementById('answer-input').value = "";
-        document.getElementById('btn-ar').style.display = 'none';
+    } else {
+        alert("Risposta errata! Riprova.");
     }
+}
 
-    function checkAnswer() {
-        const ans = document.getElementById('answer-input').value.toLowerCase().trim();
-        const levelData = gameData[currentLevel];
-        if(ans === levelData.questions[currentSubQuestion].a) {
-            if (currentSubQuestion < levelData.questions.length - 1) {
-                currentSubQuestion++; 
-                loadLevel();
-            } else {
-                document.getElementById('hint-box').innerText = "INDIZIO: " + levelData.hint;
-                document.getElementById('hint-box').style.display = 'block';
-                document.getElementById('btn-ar').style.display = 'block';
+function activateAR() {
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('game-ui').style.display = 'flex';
+    document.getElementById('ar-instruction').style.display = 'block';
+    // Forza il refresh della camera AR
+    window.dispatchEvent(new Event('resize'));
+}
+
+function foundObject() {
+    score += 100;
+    document.getElementById('ui-score').innerText = score;
+    alert("Oggetto trovato! +100 punti.");
+    
+    // Passa al livello successivo
+    currentLevel++;
+    currentSubQuestion = 0;
+    loadLevel();
+}
+
+// 4. LOGICA RICONOSCIMENTO MARCATORE
+window.onload = function() {
+    const markers = document.querySelectorAll('a-marker');
+    markers.forEach((m) => {
+        m.addEventListener('markerFound', () => {
+            // Controlla se siamo in modalità AR (istruzioni visibili)
+            const arAttivo = document.getElementById('ar-instruction').style.display === 'block';
+            const markerGiusto = "marker-" + currentLevel;
+
+            if(arAttivo && m.id === markerGiusto) {
+                foundObject();
+            } else if (arAttivo && m.id !== markerGiusto) {
+                console.log("Marcatore sbagliato. Cerco: " + markerGiusto + " ma ho visto: " + m.id);
             }
-        } else { alert("Riprova!"); }
-    }
-
-    function activateAR() {
-        document.getElementById('quiz-screen').style.display = 'none';
-        document.getElementById('game-ui').style.display = 'flex';
-        document.getElementById('ar-instruction').style.display = 'block';
-    }
-
-    function foundObject() {
-        score += 100;
-        document.getElementById('ui-score').innerText = score;
-        alert("Punti assegnati! Passiamo al prossimo livello.");
-        currentLevel++;
-        currentSubQuestion = 0;
-        loadLevel();
-    }
-
-    // LOGICA DI RICONOSCIMENTO AUTOMATICO
-    window.onload = function() {
-        const scene = document.querySelector('a-scene');
-        scene.addEventListener('loaded', () => {
-            const markers = document.querySelectorAll('a-marker');
-            markers.forEach((m) => {
-                m.addEventListener('markerFound', () => {
-                    // Controlla se il marcatore inquadrato è quello del livello attuale
-                    const markerGiusto = "marker-" + currentLevel;
-                    if(m.id === markerGiusto && document.getElementById('ar-instruction').style.display === 'block') {
-                        foundObject();
-                    }
-                });
-            });
         });
-    }
+    });
+}
 </script>
 </body>
 </html>
