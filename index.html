@@ -3,245 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Scienza AR - Missione</title>
+    <title>Scienza AR - Fix Mobile</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 
     <style>
-        :root {
-            --primary: #00d2ff;
-            --dark: #1a1a2e;
-            --accent: #f1c40f;
+        /* FORZATURA TRASPARENZA TOTALE */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: transparent !important; /* MAI NERO */
+            overflow: hidden !important;
         }
 
-        /* 1. TRASPARENZA TOTALE - Fondamentale per vedere la camera */
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: sans-serif;
-            background: none !important; /* Rimuove il nero */
+        /* IL VIDEO DELLA CAMERA */
+        video {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover !important;
+            z-index: -1 !important; /* Dietro a tutto */
         }
 
-        /* 2. HUD FISSO - Sempre in cima, indipendentemente dai menu */
-        #hud-container {
+        /* LAYER UI - IL PIÙ ALTO POSSIBILE */
+        #master-ui {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            z-index: 99999;
-            pointer-events: none; /* Cruciale: i click passano attraverso */
+            z-index: 2147483647 !important; /* Massimo valore possibile */
+            pointer-events: none;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
         }
 
-        .hud-top-bar {
+        /* SCHERMATE (LOGIN E QUIZ) */
+        .full-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #1a1a2e; /* Blu scuro solido per i menu */
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: auto;
+        }
+
+        .box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 25px; border-radius: 20px;
+            border: 2px solid #00d2ff;
+            width: 80%; max-width: 300px;
+            text-align: center; color: white;
+            font-family: sans-serif;
+        }
+
+        /* HUD - I CONTATORI CHE NON VEDI */
+        #hud-ar {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            padding: 40px 20px; /* Spazio per la notch */
             display: none; /* Appare solo in AR */
             justify-content: space-between;
-            padding: 40px 20px; /* Spazio per la notch */
+            box-sizing: border-box;
+            pointer-events: none;
         }
 
-        .stat-badge {
-            background: rgba(0,0,0,0.8);
-            color: var(--accent);
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: 2px solid var(--accent);
-            font-size: 20px;
+        .badge {
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: #f1c40f !important;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 2px solid #f1c40f;
+            font-size: 18px;
             font-weight: bold;
             pointer-events: auto;
         }
 
-        #instruction-text {
-            display: none; /* Appare solo in AR */
-            background: rgba(0,0,0,0.85);
-            color: white;
-            padding: 20px;
-            margin: 0 20px 40px 20px;
-            border-radius: 20px;
+        #bottom-bar {
+            position: absolute;
+            bottom: 50px; left: 5%;
+            width: 90%;
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: white !important;
+            padding: 15px;
+            border-radius: 15px;
             text-align: center;
-            font-size: 22px;
+            display: none;
+            font-size: 18px;
             font-weight: bold;
-            border: 2px solid var(--primary);
+            border: 2px solid #00d2ff;
         }
 
-        /* 3. SCHERMATE DI GIOCO (LOGIN E QUIZ) */
-        .overlay-screen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: var(--dark); /* Qui il colore serve per coprire la camera all'inizio */
-            z-index: 100000;
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        .glass-box {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            padding: 30px; border-radius: 25px;
-            border: 2px solid var(--primary);
-            width: 85%; max-width: 320px;
-            text-align: center; color: white;
-        }
-
-        input {
-            width: 100%; padding: 15px; margin: 15px 0;
-            border-radius: 12px; border: none; font-size: 18px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%; padding: 18px;
-            background: var(--primary); color: white;
-            border: none; border-radius: 12px;
-            font-weight: bold; font-size: 18px;
-            cursor: pointer;
-        }
-
-        /* FIX PER IL VIDEO */
-        .a-canvas { z-index: 0; }
-        video { z-index: -1 !important; position: fixed !important; top:0; left:0; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #00d2ff; border: none; color: white; font-weight: bold; border-radius: 8px; font-size: 16px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="hud-container">
-        <div id="hud-visuals" class="hud-top-bar">
-            <div class="stat-badge" id="name-tag">---</div>
-            <div class="stat-badge">PT: <span id="points-tag">0</span></div>
+    <div id="master-ui">
+        <div id="screen-login" class="full-overlay">
+            <div class="box">
+                <h2 style="color:#00d2ff; margin-top:0;">MISSIONE AR</h2>
+                <input type="text" id="n" placeholder="Nome">
+                <input type="text" id="c" placeholder="Cognome">
+                <button onclick="avvia()">INIZIA</button>
+            </div>
         </div>
-        <div id="instruction-text">Punta la fotocamera verso l'oggetto!</div>
+
+        <div id="screen-quiz" class="full-overlay" style="display:none;">
+            <div class="box">
+                <h3 id="lvl-txt" style="color:#00d2ff;">OGGETTO 1</h3>
+                <p id="domanda">...</p>
+                <input type="text" id="risposta" placeholder="Scrivi qui...">
+                <button onclick="controlla()">VERIFICA</button>
+                <div id="indizio" style="display:none; color:#f1c40f; margin-top:10px; font-weight:bold;"></div>
+                <button id="btn-camera" onclick="apriCamera()" style="display:none; background:#27ae60;">VAI ALLA CAMERA</button>
+            </div>
+        </div>
+
+        <div id="hud-ar">
+            <div class="badge" id="display-nome">---</div>
+            <div class="badge">PT: <span id="display-punti">0</span></div>
+        </div>
+        <div id="bottom-bar">Inquadra l'oggetto!</div>
     </div>
 
-    <div id="screen-login" class="overlay-screen">
-        <div class="glass-box">
-            <h1 style="color:var(--primary); margin:0 0 10px 0;">SCIENZA AR</h1>
-            <p>Inserisci i tuoi dati</p>
-            <input type="text" id="user-n" placeholder="Nome">
-            <input type="text" id="user-c" placeholder="Cognome">
-            <button onclick="doStart()">ACCEDI</button>
-        </div>
-    </div>
-
-    <div id="screen-quiz" class="overlay-screen" style="display: none;">
-        <div class="glass-box">
-            <h2 id="lvl-label" style="color:var(--primary)">LIVELLO 1</h2>
-            <p id="q-text" style="font-size: 18px; margin: 20px 0;">...</p>
-            <input type="text" id="ans-input" placeholder="Risposta...">
-            <button onclick="doCheck()">VERIFICA</button>
-            <p id="h-text" style="display:none; color:var(--accent); font-weight:bold; margin-top:15px;"></p>
-            <button id="btn-open-ar" onclick="doOpenAR()" style="display:none; background:#2ecc71; margin-top:10px;">VAI ALLA CAMERA</button>
-        </div>
-    </div>
-
-    <a-scene embedded 
-             arjs="sourceType: webcam; debugUIEnabled: false; facingMode: environment;"
-             vr-mode-ui="enabled: false">
-        
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; facingMode: environment;" vr-mode-ui="enabled: false">
         <a-marker type="pattern" url="marker2.patt" id="marker-0">
             <a-sphere position="0 0.5 0" radius="0.5" color="#00d2ff"></a-sphere>
         </a-marker>
-
         <a-marker type="pattern" url="marker3.patt" id="marker-1">
             <a-box position="0 0.5 0" color="#ff4757"></a-box>
         </a-marker>
-
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        let currentLvl = 0;
-        let currentSub = 0;
-        let score = 0;
-
-        const game = [
-            { 
-                qs: [{q: "Formula dell'acqua?", a: "h2o"}, {q: "Temperatura ebollizione?", a: "100"}],
-                hint: "Indizio: Cerca vicino al lavandino!"
-            },
-            { 
-                qs: [{q: "Quante eliche ha il DNA?", a: "2"}],
-                hint: "Indizio: Cerca tra i libri!"
-            }
+        let lvl = 0; let sub = 0; let pt = 0;
+        const dati = [
+            { q: [{d:"Formula acqua?", r:"h2o"}, {d:"Gradi bolle?", r:"100"}], h:"Cerca al lavandino" },
+            { q: [{d:"Eliche DNA?", r:"2"}], h:"Cerca tra i libri" }
         ];
 
-        function doStart() {
-            const n = document.getElementById('user-n').value;
-            const c = document.getElementById('user-c').value;
-            if(!n || !c) return alert("Mancano i dati!");
-            
-            document.getElementById('name-tag').innerText = n.toUpperCase();
+        // KILLER DEL NERO: Forza la trasparenza ogni 500ms
+        setInterval(() => {
+            document.documentElement.style.backgroundColor = "transparent";
+            document.body.style.backgroundColor = "transparent";
+        }, 500);
+
+        function avvia() {
+            const nome = document.getElementById('n').value;
+            if(!nome) return alert("Manca il nome!");
+            document.getElementById('display-nome').innerText = nome.toUpperCase();
             document.getElementById('screen-login').style.display = 'none';
-            loadStep();
+            mostraQuiz();
         }
 
-        function loadStep() {
-            if(currentLvl >= game.length) {
-                alert("MISSIONE FINITA!");
-                location.reload();
-                return;
-            }
-            // Mostra lo schermo del quiz (che copre la camera)
+        function mostraQuiz() {
+            if(lvl >= dati.length) return alert("FINE!");
             document.getElementById('screen-quiz').style.display = 'flex';
+            document.getElementById('hud-ar').style.display = 'none';
+            document.getElementById('bottom-bar').style.display = 'none';
+            document.getElementById('indizio').style.display = 'none';
+            document.getElementById('btn-camera').style.display = 'none';
             
-            // Nascondi HUD AR
-            document.getElementById('hud-visuals').style.display = 'none';
-            document.getElementById('instruction-text').style.display = 'none';
-            
-            document.getElementById('btn-open-ar').style.display = 'none';
-            document.getElementById('h-text').style.display = 'none';
-
-            const data = game[currentLvl];
-            document.getElementById('lvl-label').innerText = "OGGETTO #" + (currentLvl + 1);
-            document.getElementById('q-text').innerText = data.qs[currentSub].q;
-            document.getElementById('ans-input').value = "";
+            document.getElementById('lvl-txt').innerText = "OGGETTO " + (lvl+1);
+            document.getElementById('domanda').innerText = dati[lvl].q[sub].d;
+            document.getElementById('risposta').value = "";
         }
 
-        function doCheck() {
-            const r = document.getElementById('ans-input').value.toLowerCase().trim();
-            const data = game[currentLvl];
-
-            if(r === data.qs[currentSub].a) {
-                if(currentSub < data.qs.length - 1) {
-                    currentSub++;
-                    loadStep();
-                } else {
-                    document.getElementById('h-text').innerText = data.hint;
-                    document.getElementById('h-text').style.display = 'block';
-                    document.getElementById('btn-open-ar').style.display = 'block';
+        function controlla() {
+            const ris = document.getElementById('risposta').value.toLowerCase().trim();
+            if(ris === dati[lvl].q[sub].r) {
+                if(sub < dati[lvl].q[sub].length - 1) { sub++; mostraQuiz(); }
+                else {
+                    document.getElementById('indizio').innerText = "Indizio: " + dati[lvl].h;
+                    document.getElementById('indizio').style.display = 'block';
+                    document.getElementById('btn-camera').style.display = 'block';
                 }
-            } else {
-                alert("Sbagliato, riprova!");
-            }
+            } else { alert("Sbagliato!"); }
         }
 
-        function doOpenAR() {
-            // Nasconde il quiz, lasciando vedere la camera sotto
+        function apriCamera() {
             document.getElementById('screen-quiz').style.display = 'none';
-            
-            // Mostra i contatori sopra il video
-            document.getElementById('hud-visuals').style.display = 'flex';
-            document.getElementById('instruction-text').style.display = 'block';
+            document.getElementById('hud-ar').style.display = 'flex';
+            document.getElementById('bottom-bar').style.display = 'block';
         }
 
-        // Gestione Marker
-        window.addEventListener('load', () => {
-            const markers = document.querySelectorAll('a-marker');
-            markers.forEach(m => {
+        window.onload = () => {
+            document.querySelectorAll('a-marker').forEach(m => {
                 m.addEventListener('markerFound', () => {
-                    // Controlla se siamo in modalità camera
-                    const isAR = document.getElementById('screen-quiz').style.display === 'none';
-                    if(isAR && m.id === "marker-" + currentLvl) {
-                        score += 100;
-                        document.getElementById('points-tag').innerText = score;
+                    if(document.getElementById('screen-quiz').style.display === 'none' && m.id === "marker-"+lvl) {
+                        pt += 100;
+                        document.getElementById('display-punti').innerText = pt;
                         alert("TROVATO!");
-                        currentLvl++;
-                        currentSub = 0;
-                        loadStep();
+                        lvl++; sub = 0; mostraQuiz();
                     }
                 });
             });
-        });
+        }
     </script>
 </body>
 </html>
