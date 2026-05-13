@@ -3,207 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Scienza AR - Fix Mobile</title>
+    <title>Scienza AR - Missione QR</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 
     <style>
-        /* FORZATURA TRASPARENZA TOTALE */
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background-color: transparent !important; /* MAI NERO */
-            overflow: hidden !important;
+        :root { --primary: #00d2ff; --dark: #1a1a2e; --accent: #f1c40f; }
+
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: sans-serif;
+            background-color: transparent !important;
         }
 
-        /* IL VIDEO DELLA CAMERA */
-        video {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            object-fit: cover !important;
-            z-index: -1 !important; /* Dietro a tutto */
+        /* UI LAYER */
+        #ui-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 9999; pointer-events: none;
         }
 
-        /* LAYER UI - IL PIÙ ALTO POSSIBILE */
-        #master-ui {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2147483647 !important; /* Massimo valore possibile */
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* SCHERMATE (LOGIN E QUIZ) */
-        .full-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #1a1a2e; /* Blu scuro solido per i menu */
-            display: flex; align-items: center; justify-content: center;
+        /* SCHERMATE MENU */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark); display: flex; align-items: center; justify-content: center;
             pointer-events: auto;
         }
 
-        .box {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 25px; border-radius: 20px;
-            border: 2px solid #00d2ff;
-            width: 80%; max-width: 300px;
+        .glass-box {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px); padding: 30px; border-radius: 25px;
+            border: 2px solid var(--primary); width: 85%; max-width: 320px;
             text-align: center; color: white;
-            font-family: sans-serif;
         }
 
-        /* HUD - I CONTATORI CHE NON VEDI */
-        #hud-ar {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            padding: 40px 20px; /* Spazio per la notch */
-            display: none; /* Appare solo in AR */
-            justify-content: space-between;
-            box-sizing: border-box;
-            pointer-events: none;
+        /* HUD - CORREZIONE POSIZIONAMENTO */
+        #hud-top {
+            position: absolute; top: 40px; left: 0; width: 100%;
+            display: none; justify-content: space-between;
+            padding: 0 20px; box-sizing: border-box;
         }
 
         .badge {
-            background: rgba(0, 0, 0, 0.8) !important;
-            color: #f1c40f !important;
-            padding: 10px 15px;
-            border-radius: 10px;
-            border: 2px solid #f1c40f;
-            font-size: 18px;
-            font-weight: bold;
-            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.8); color: var(--accent);
+            padding: 10px 15px; border-radius: 12px; border: 2px solid var(--accent);
+            font-size: 18px; font-weight: bold; pointer-events: auto;
         }
 
+        /* BARRA IN BASSO - FIX CENTRATURA */
         #bottom-bar {
-            position: absolute;
-            bottom: 50px; left: 5%;
-            width: 90%;
-            background: rgba(0, 0, 0, 0.8) !important;
-            color: white !important;
-            padding: 15px;
-            border-radius: 15px;
-            text-align: center;
-            display: none;
-            font-size: 18px;
-            font-weight: bold;
-            border: 2px solid #00d2ff;
+            position: absolute; 
+            bottom: 40px; 
+            left: 50%; 
+            transform: translateX(-50%); /* Centratura perfetta */
+            width: 85%; /* Ridotto leggermente per sicurezza */
+            background: rgba(0, 0, 0, 0.8); color: white;
+            padding: 15px; border-radius: 20px;
+            text-align: center; display: none;
+            font-size: 18px; font-weight: bold;
+            border: 2px solid var(--primary);
+            box-sizing: border-box; /* Evita sforamenti */
         }
 
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
-        button { width: 100%; padding: 15px; background: #00d2ff; border: none; color: white; font-weight: bold; border-radius: 8px; font-size: 16px; margin-top: 10px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+
+        video { z-index: -1 !important; position: fixed !important; top:0; left:0; }
     </style>
 </head>
 <body>
 
-    <div id="master-ui">
-        <div id="screen-login" class="full-overlay">
-            <div class="box">
-                <h2 style="color:#00d2ff; margin-top:0;">MISSIONE AR</h2>
-                <input type="text" id="n" placeholder="Nome">
-                <input type="text" id="c" placeholder="Cognome">
-                <button onclick="avvia()">INIZIA</button>
+    <div id="ui-layer">
+        <div id="scr-login" class="overlay">
+            <div class="glass-box">
+                <h2 style="color:var(--primary)">MISSIONE AR</h2>
+                <input type="text" id="nome" placeholder="Nome">
+                <input type="text" id="cognome" placeholder="Cognome">
+                <button onclick="start()">GIOCA</button>
             </div>
         </div>
 
-        <div id="screen-quiz" class="full-overlay" style="display:none;">
-            <div class="box">
-                <h3 id="lvl-txt" style="color:#00d2ff;">OGGETTO 1</h3>
-                <p id="domanda">...</p>
-                <input type="text" id="risposta" placeholder="Scrivi qui...">
-                <button onclick="controlla()">VERIFICA</button>
-                <div id="indizio" style="display:none; color:#f1c40f; margin-top:10px; font-weight:bold;"></div>
-                <button id="btn-camera" onclick="apriCamera()" style="display:none; background:#27ae60;">VAI ALLA CAMERA</button>
+        <div id="scr-quiz" class="overlay" style="display:none;">
+            <div class="glass-box">
+                <h3 id="lvl-title" style="color:var(--primary)">OGGETTO 1</h3>
+                <p id="question">...</p>
+                <input type="text" id="ans" placeholder="Risposta...">
+                <button onclick="check()">VERIFICA</button>
+                <p id="hint" style="display:none; color:var(--accent); font-weight:bold; margin-top:15px;"></p>
+                <button id="btn-ar" onclick="openAR()" style="display:none; background:#2ecc71;">SCANSIONA QR</button>
             </div>
         </div>
 
-        <div id="hud-ar">
-            <div class="badge" id="display-nome">---</div>
-            <div class="badge">PT: <span id="display-punti">0</span></div>
+        <div id="hud-top">
+            <div class="badge" id="name-display">---</div>
+            <div class="badge">PT: <span id="pts-display">0</span></div>
         </div>
-        <div id="bottom-bar">Inquadra l'oggetto!</div>
+        <div id="bottom-bar">Inquadra il codice dell'oggetto!</div>
     </div>
 
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; facingMode: environment;" vr-mode-ui="enabled: false">
-        <a-marker type="pattern" url="marker2.patt" id="marker-0">
-            <a-sphere position="0 0.5 0" radius="0.5" color="#00d2ff"></a-sphere>
+    <a-scene embedded 
+             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+             vr-mode-ui="enabled: false">
+        
+        <a-marker type="barcode" value="1" id="mark-0">
+            <a-box position="0 0.5 0" material="color: #00d2ff; opacity: 0.8" animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
         </a-marker>
-        <a-marker type="pattern" url="marker3.patt" id="marker-1">
-            <a-box position="0 0.5 0" color="#ff4757"></a-box>
+
+        <a-marker type="barcode" value="2" id="mark-1">
+            <a-sphere position="0 0.5 0" radius="0.6" color="#ff4757"></a-sphere>
         </a-marker>
+
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        let lvl = 0; let sub = 0; let pt = 0;
-        const dati = [
-            { q: [{d:"Formula acqua?", r:"h2o"}, {d:"Gradi bolle?", r:"100"}], h:"Cerca al lavandino" },
-            { q: [{d:"Eliche DNA?", r:"2"}], h:"Cerca tra i libri" }
+        let lvl = 0; let sub = 0; let score = 0;
+        const db = [
+            { qs: [{q: "Formula acqua?", a: "h2o"}, {q: "Bolle a?", a: "100"}], h: "Inquadra il QR sul lavandino" },
+            { qs: [{q: "Eliche DNA?", a: "2"}], h: "Inquadra il QR in biblioteca" }
         ];
 
-        // KILLER DEL NERO: Forza la trasparenza ogni 500ms
-        setInterval(() => {
-            document.documentElement.style.backgroundColor = "transparent";
-            document.body.style.backgroundColor = "transparent";
-        }, 500);
-
-        function avvia() {
-            const nome = document.getElementById('n').value;
-            if(!nome) return alert("Manca il nome!");
-            document.getElementById('display-nome').innerText = nome.toUpperCase();
-            document.getElementById('screen-login').style.display = 'none';
-            mostraQuiz();
+        function start() {
+            const n = document.getElementById('nome').value;
+            if(!n) return alert("Inserisci nome!");
+            document.getElementById('name-display').innerText = n.toUpperCase();
+            document.getElementById('scr-login').style.display = 'none';
+            loadQuiz();
         }
 
-        function mostraQuiz() {
-            if(lvl >= dati.length) return alert("FINE!");
-            document.getElementById('screen-quiz').style.display = 'flex';
-            document.getElementById('hud-ar').style.display = 'none';
+        function loadQuiz() {
+            if(lvl >= db.length) { alert("FINE MISSIONE!"); location.reload(); return; }
+            document.getElementById('scr-quiz').style.display = 'flex';
+            document.getElementById('hud-top').style.display = 'none';
             document.getElementById('bottom-bar').style.display = 'none';
-            document.getElementById('indizio').style.display = 'none';
-            document.getElementById('btn-camera').style.display = 'none';
-            
-            document.getElementById('lvl-txt').innerText = "OGGETTO " + (lvl+1);
-            document.getElementById('domanda').innerText = dati[lvl].q[sub].d;
-            document.getElementById('risposta').value = "";
+            document.getElementById('btn-ar').style.display = 'none';
+            document.getElementById('hint').style.display = 'none';
+
+            document.getElementById('lvl-title').innerText = "OGGETTO " + (lvl+1);
+            document.getElementById('question').innerText = db[lvl].qs[sub].q;
+            document.getElementById('ans').value = "";
         }
 
-        function controlla() {
-            const ris = document.getElementById('risposta').value.toLowerCase().trim();
-            if(ris === dati[lvl].q[sub].r) {
-                if(sub < dati[lvl].q[sub].length - 1) { sub++; mostraQuiz(); }
+        function check() {
+            const r = document.getElementById('ans').value.toLowerCase().trim();
+            if(r === db[lvl].qs[sub].a) {
+                if(sub < db[lvl].qs.length - 1) { sub++; loadQuiz(); }
                 else {
-                    document.getElementById('indizio').innerText = "Indizio: " + dati[lvl].h;
-                    document.getElementById('indizio').style.display = 'block';
-                    document.getElementById('btn-camera').style.display = 'block';
+                    document.getElementById('hint').innerText = db[lvl].h;
+                    document.getElementById('hint').style.display = 'block';
+                    document.getElementById('btn-ar').style.display = 'block';
                 }
-            } else { alert("Sbagliato!"); }
+            } else { alert("Riprova!"); }
         }
 
-        function apriCamera() {
-            document.getElementById('screen-quiz').style.display = 'none';
-            document.getElementById('hud-ar').style.display = 'flex';
+        function openAR() {
+            document.getElementById('scr-quiz').style.display = 'none';
+            document.getElementById('hud-top').style.display = 'flex';
             document.getElementById('bottom-bar').style.display = 'block';
         }
 
+        // Fix per il video su mobile
+        window.addEventListener('camera-init', () => {
+            document.body.style.backgroundColor = "transparent";
+        });
+
+        // RICONOSCIMENTO MARKER
         window.onload = () => {
             document.querySelectorAll('a-marker').forEach(m => {
                 m.addEventListener('markerFound', () => {
-                    if(document.getElementById('screen-quiz').style.display === 'none' && m.id === "marker-"+lvl) {
-                        pt += 100;
-                        document.getElementById('display-punti').innerText = pt;
-                        alert("TROVATO!");
-                        lvl++; sub = 0; mostraQuiz();
+                    const scanning = document.getElementById('bottom-bar').style.display === 'block';
+                    if(scanning && m.id === "mark-" + lvl) {
+                        score += 100;
+                        document.getElementById('pts-display').innerText = score;
+                        alert("OGGETTO RICONOSCIUTO! +100");
+                        lvl++; sub = 0;
+                        loadQuiz();
                     }
                 });
             });
