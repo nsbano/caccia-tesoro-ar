@@ -51,19 +51,25 @@
         }
 
         /* BARRA IN BASSO - FIX CENTRATURA */
-        #bottom-bar {
-            position: absolute; 
-            bottom: 40px; 
-            left: 50%; 
-            transform: translateX(-50%); /* Centratura perfetta */
-            width: 85%; /* Ridotto leggermente per sicurezza */
-            background: rgba(0, 0, 0, 0.8); color: white;
-            padding: 15px; border-radius: 20px;
-            text-align: center; display: none;
-            font-size: 18px; font-weight: bold;
-            border: 2px solid var(--primary);
-            box-sizing: border-box; /* Evita sforamenti */
-        }
+       #bottom-bar {
+    position: fixed; /* Fixed è più stabile di absolute per la UI */
+    bottom: 30px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 85%; 
+    max-width: 400px; /* Evita che diventi troppo larga su tablet */
+    background: rgba(0, 0, 0, 0.85); 
+    color: white;
+    padding: 20px; 
+    border-radius: 20px;
+    text-align: center; 
+    display: none;
+    font-size: 18px; 
+    font-weight: bold;
+    border: 2px solid var(--primary);
+    box-sizing: border-box; /* Fondamentale: include il padding nel calcolo della larghezza */
+    z-index: 10000;
+}
 
         input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; box-sizing: border-box; }
         button { width: 100%; padding: 15px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 10px; }
