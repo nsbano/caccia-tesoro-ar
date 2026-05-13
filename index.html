@@ -257,7 +257,14 @@
             document.getElementById('game-stats').style.display = 'flex';
             document.getElementById('instruction-bar').style.display = 'block';
         }
+        window.addEventListener('camera-error', (error) => {
+    console.error("Errore camera:", error);
+    alert("Errore fotocamera: Verifica di essere su HTTPS e di aver dato i permessi!");
+});
 
+window.addEventListener('camera-init', (data) => {
+    console.log("Camera inizializzata correttamente");
+});
         // Logica di rilevamento marker
         window.onload = () => {
             const markers = document.querySelectorAll('a-marker');
