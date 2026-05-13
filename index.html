@@ -164,9 +164,14 @@
         <div id="instruction-bar">Inquadra l'oggetto per completare il livello!</div>
     </div>
 
-    <a-scene embedded 
-             arjs="sourceType: webcam; debugUIEnabled: false; videoSettings: {facingMode: 'environment'};"
-             vr-mode-ui="enabled: false">
+       <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true; colorManagement: true;"
+        vr-mode-ui="enabled: false">
+    
+        <a-entity camera></a-entity>
+    </a-scene>
         
         <a-marker type="pattern" url="marker2.patt" id="marker-0">
             <a-sphere position="0 0.5 0" radius="0.5" color="#00d2ff" animation="property: position; to: 0 0.7 0; dir: alternate; dur: 1000; loop: true"></a-sphere>
