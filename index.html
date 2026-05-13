@@ -16,19 +16,21 @@
         }
 
         /* Reset fondamentale per AR.js */
-    body {
-        background-color: transparent !important;
-    }
+    /* Rendi tutto trasparente tranne i box della UI */
+body, html, a-scene {
+    background-color: transparent !important;
+}
 
-    /* La scena AR deve essere visibile */
-    a-scene {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1; /* Sotto la UI */
-    }
+/* Assicurati che il video della camera sia visibile */
+video {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    z-index: -1 !important; /* Deve stare dietro la UI */
+}
 
         /* Layer UI: Fisso e sempre sopra */
         #ui-master {
@@ -164,25 +166,23 @@
         <div id="instruction-bar">Inquadra l'oggetto per completare il livello!</div>
     </div>
 
-       <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-        renderer="logarithmicDepthBuffer: true; colorManagement: true;"
-        vr-mode-ui="enabled: false">
+     <a-scene 
+    embedded 
+    arjs="sourceType: webcam; debugUIEnabled: false; facingMode: environment;"
+    renderer="antialias: true; alpha: true; precision: medium;"
+    vr-mode-ui="enabled: false">
     
-        <a-entity camera></a-entity>
-    </a-scene>
+    <a-marker type="pattern" url="marker2.patt" id="marker-0">
+        <a-box position="0 0.5 0" material="color: #00d2ff;"></a-box>
+    </a-marker>
+
+    <a-marker type="pattern" url="marker3.patt" id="marker-1">
+        <a-box position="0 0.5 0" material="color: #ff4757;"></a-box>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+</a-scene>
         
-        <a-marker type="pattern" url="marker2.patt" id="marker-0">
-            <a-sphere position="0 0.5 0" radius="0.5" color="#00d2ff" animation="property: position; to: 0 0.7 0; dir: alternate; dur: 1000; loop: true"></a-sphere>
-        </a-marker>
-
-        <a-marker type="pattern" url="marker3.patt" id="marker-1">
-            <a-box position="0 0.5 0" material="color: #ff4757" animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
-        </a-marker>
-
-        <a-entity camera></a-entity>
-    </a-scene>
 
     <script>
         let currentLevel = 0;
@@ -233,7 +233,15 @@
             document.getElementById('question-txt').innerText = levelData.questions[currentSub].q;
             document.getElementById('answer-in').value = "";
         }
-
+        document.querySelector('a-scene').addEventListener('loaded', function () {
+    const video = document.querySelector('video');
+    if (video) {
+        video.setAttribute('playsinline', ''); // Fondamentale per iPhone
+        video.play().catch(err => {
+            console.warn("Autoplay bloccato, l'utente deve interagire");
+        });
+    }
+});
         function checkAnswer() {
             const ans = document.getElementById('answer-in').value.toLowerCase().trim();
             const levelData = data[currentLevel];
@@ -257,14 +265,7 @@
             document.getElementById('game-stats').style.display = 'flex';
             document.getElementById('instruction-bar').style.display = 'block';
         }
-        window.addEventListener('camera-error', (error) => {
-    console.error("Errore camera:", error);
-    alert("Errore fotocamera: Verifica di essere su HTTPS e di aver dato i permessi!");
-});
-
-window.addEventListener('camera-init', (data) => {
-    console.log("Camera inizializzata correttamente");
-});
+       
         // Logica di rilevamento marker
         window.onload = () => {
             const markers = document.querySelectorAll('a-marker');
