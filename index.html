@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Scienza AR - Missione</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
@@ -15,140 +15,164 @@
             --accent: #f1c40f;
         }
 
-        /* Forza il video a stare sotto e coprire tutto */
+        /* RESET TOTALE */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: sans-serif;
-            background-color: transparent !important;
+            overflow: hidden; font-family: Arial, sans-serif;
+            background-color: #000 !important;
         }
 
-        video {
-            position: fixed !important; top: 0; left: 0;
-            width: 100vw !important; height: 100vh !important;
-            object-fit: cover !important; z-index: -1 !important;
+        /* UI MASTER - BLOCCATA */
+        #ui-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 9999;
+            pointer-events: none;
         }
 
-        /* Contenitore UI principale: fisso per non muoversi con la tastiera */
-        #ui-master {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100dvh; /* Altezza dinamica */
-            z-index: 999; pointer-events: none;
-        }
-
-        /* Schermate Login e Quiz */
-        .overlay {
-            position: absolute; top: 0; left: 0;
+        /* SCHERMATE (LOGIN E QUIZ) */
+        .screen {
+            position: absolute;
+            top: 0; left: 0;
             width: 100%; height: 100%;
             background: var(--dark);
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             pointer-events: auto;
         }
 
+        /* IL BOX: Centrato con transform per non subire scossoni dalla tastiera */
         .glass-box {
+            position: absolute;
+            top: 45%; left: 50%;
+            transform: translate(-50%, -50%);
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            padding: 30px; border-radius: 25px;
+            padding: 30px;
+            border-radius: 20px;
             border: 2px solid var(--primary);
-            width: 85%; max-width: 350px;
-            text-align: center; color: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 80%;
+            max-width: 320px;
+            text-align: center;
+            color: white;
         }
 
-        /* Input grandi per dita umane */
+        h1 { font-size: 28px; margin-bottom: 10px; color: var(--primary); }
+        p { font-size: 18px; line-height: 1.4; }
+
         input {
-            width: 100%; padding: 18px; margin: 15px 0;
-            border-radius: 15px; border: none;
-            font-size: 18px; text-align: center;
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border: none;
+            font-size: 18px; /* Evita lo zoom automatico su iOS */
             box-sizing: border-box;
         }
 
         button {
-            width: 100%; padding: 18px;
-            background: var(--primary); color: white;
-            border: none; border-radius: 15px;
-            font-weight: bold; font-size: 18px;
-            text-transform: uppercase; cursor: pointer;
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 18px;
         }
 
-        /* HUD: Badge in alto più grandi */
-        #game-stats {
+        /* HUD: I CONTATORI IN ALTO - Molto più grandi */
+        #hud {
             position: absolute;
-            top: max(20px, env(safe-area-inset-top));
-            left: 0; width: 100%;
-            display: none; justify-content: space-evenly;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            display: none; /* Attivato via JS */
+            justify-content: space-around;
             pointer-events: none;
         }
 
-        .stat-badge {
-            background: rgba(0,0,0,0.8);
+        .badge {
+            background: rgba(0, 0, 0, 0.85);
             color: var(--accent);
-            padding: 12px 20px;
-            border-radius: 15px;
-            font-size: 16px; /* Aumentato */
-            font-weight: bold;
+            padding: 15px 20px;
+            border-radius: 12px;
             border: 2px solid var(--accent);
-            min-width: 120px; text-align: center;
+            font-size: 20px; /* Testo grande */
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* Istruzioni in basso: Grandi e Leggibili */
+        /* BARRA ISTRUZIONI IN BASSO */
         #instruction-bar {
             position: absolute;
-            bottom: max(40px, env(safe-area-inset-bottom));
-            left: 10%; width: 80%;
-            background: rgba(0,0,0,0.85);
-            color: white; padding: 20px;
-            border-radius: 20px; text-align: center;
-            display: none; font-size: 18px; /* Aumentato */
-            font-weight: bold; border: 2px solid var(--primary);
+            bottom: 50px;
+            left: 5%;
+            width: 90%;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            font-size: 22px; /* Testo molto grande */
+            font-weight: bold;
+            border: 2px solid var(--primary);
+            box-sizing: border-box;
         }
 
-        #hint-txt { font-size: 16px; color: var(--accent); margin: 15px 0; }
+        /* FIX PER VIDEO AR.JS */
+        video {
+            z-index: -1 !important;
+        }
     </style>
 </head>
 <body>
 
-    <div id="ui-master">
-        <div id="screen-login" class="overlay">
+    <div id="ui-layer">
+        <div id="login-screen" class="screen">
             <div class="glass-box">
-                <h1 style="color:var(--primary); font-size: 28px; margin: 0 0 10px 0;">MISSIONE AR</h1>
-                <p style="opacity:0.8; font-size: 16px;">Inserisci nome e cognome</p>
-                <input type="text" id="nome" placeholder="Nome">
-                <input type="text" id="cognome" placeholder="Cognome">
-                <button onclick="startGame()">ENTRA NEL GIOCO</button>
+                <h1>MISSIONE AR</h1>
+                <p>Inserisci i tuoi dati</p>
+                <input type="text" id="nome" placeholder="Nome" autocomplete="off">
+                <input type="text" id="cognome" placeholder="Cognome" autocomplete="off">
+                <button onclick="startGame()">GIOCA ORA</button>
             </div>
         </div>
 
-        <div id="screen-quiz" class="overlay" style="display: none;">
+        <div id="quiz-screen" class="screen" style="display: none;">
             <div class="glass-box">
-                <h2 id="level-label" style="color:var(--primary); font-size: 24px; margin:0;">Livello 1</h2>
-                <p id="question-txt" style="margin: 25px 0; font-size: 18px; line-height: 1.4;">...</p>
-                <input type="text" id="answer-in" placeholder="Risposta...">
-                <button onclick="checkAnswer()">CONTROLLA</button>
-                <div id="hint-txt" style="display:none;"></div>
-                <button id="btn-scan" onclick="goAR()" style="display:none; background:#27ae60; margin-top: 15px;">🔍 SCANSIONA ORA</button>
+                <h2 id="lvl-title" style="color:var(--primary)">Livello 1</h2>
+                <p id="question-txt">...</p>
+                <input type="text" id="answer-in" placeholder="Scrivi qui..." autocomplete="off">
+                <button onclick="checkAnswer()">VERIFICA</button>
+                <p id="hint-txt" style="display:none; color:var(--accent); font-size:16px; margin-top:10px;"></p>
+                <button id="btn-ar" onclick="startAR()" style="display:none; background:#2ecc71; margin-top:10px;">VAI ALL'AR</button>
             </div>
         </div>
 
-        <div id="game-stats">
-            <div class="stat-badge"><span id="user-display">---</span></div>
-            <div class="stat-badge">PUNTI: <span id="score-display">0</span></div>
+        <div id="hud">
+            <div class="badge" id="user-tag">---</div>
+            <div class="badge">PT: <span id="score-tag">0</span></div>
         </div>
 
-        <div id="instruction-bar">Punta la camera verso l'oggetto!</div>
+        <div id="instruction-bar">Punta la fotocamera!</div>
     </div>
 
     <a-scene embedded 
              arjs="sourceType: webcam; debugUIEnabled: false; facingMode: environment;"
-             renderer="antialias: true; alpha: true;"
-             vr-mode-ui="enabled: false">
+             vr-mode-ui="enabled: false"
+             renderer="logarithmicDepthBuffer: true; alpha: true;">
         
         <a-marker type="pattern" url="marker2.patt" id="marker-0">
-            <a-sphere position="0 0.5 0" radius="0.6" color="#00d2ff" material="opacity: 0.8; transparent: true"></a-sphere>
+            <a-sphere position="0 0.5 0" radius="0.5" color="#00d2ff" animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true"></a-sphere>
         </a-marker>
 
         <a-marker type="pattern" url="marker3.patt" id="marker-1">
-            <a-box position="0 0.5 0" scale="0.8 0.8 0.8" color="#ff4757"></a-box>
+            <a-box position="0 0.5 0" material="color: #ff4757" animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
         </a-marker>
 
         <a-entity camera></a-entity>
@@ -156,75 +180,69 @@
 
     <script>
         let currentLevel = 0;
-        let currentSub = 0;
-        let score = 0;
+        let subQ = 0;
+        let points = 0;
 
-        const data = [
+        const database = [
             { 
-                questions: [
-                    { q: "Qual è la formula chimica dell'acqua?", a: "h2o" },
-                    { q: "A quanti gradi bolle l'acqua?", a: "100" }
-                ],
-                hint: "Indizio: Cerca dove c'è un rubinetto!"
+                questions: [{q: "Formula dell'acqua?", a: "h2o"}, {q: "Gradi ebollizione?", a: "100"}],
+                hint: "Cerca vicino al lavandino!"
             },
             { 
-                questions: [
-                    { q: "Cosa significa DNA?", a: "acido desossiribonucleico" }
-                ],
-                hint: "Indizio: Cerca tra i libri!"
+                questions: [{q: "Eliche DNA?", a: "2"}],
+                hint: "Cerca in biblioteca!"
             }
         ];
 
         function startGame() {
-            const n = document.getElementById('nome').value.trim();
-            const c = document.getElementById('cognome').value.trim();
-            if(!n || !c) return alert("Inserisci i dati!");
+            const n = document.getElementById('nome').value;
+            const c = document.getElementById('cognome').value;
+            if(!n || !c) return alert("Dati incompleti!");
             
-            document.getElementById('user-display').innerText = n.toUpperCase();
-            document.getElementById('screen-login').style.display = 'none';
-            showQuiz();
+            document.getElementById('user-tag').innerText = n.toUpperCase();
+            document.getElementById('login-screen').style.display = 'none';
+            loadQuiz();
         }
 
-        function showQuiz() {
-            if(currentLevel >= data.length) {
-                alert("COMPLIMENTI! HAI FINITO!");
+        function loadQuiz() {
+            if(currentLevel >= database.length) {
+                alert("MISSIONE FINITA!");
                 location.reload();
                 return;
             }
-
-            document.getElementById('screen-quiz').style.display = 'flex';
-            document.getElementById('game-stats').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'flex';
+            document.getElementById('hud').style.display = 'none';
             document.getElementById('instruction-bar').style.display = 'none';
-            document.getElementById('btn-scan').style.display = 'none';
+            document.getElementById('btn-ar').style.display = 'none';
             document.getElementById('hint-txt').style.display = 'none';
 
-            const levelData = data[currentLevel];
-            document.getElementById('level-label').innerText = "OGGETTO #" + (currentLevel + 1);
-            document.getElementById('question-txt').innerText = levelData.questions[currentSub].q;
+            const lvl = database[currentLevel];
+            document.getElementById('lvl-title').innerText = "OGGETTO " + (currentLevel + 1);
+            document.getElementById('question-txt').innerText = lvl.questions[subQ].q;
             document.getElementById('answer-in').value = "";
         }
 
         function checkAnswer() {
-            const ans = document.getElementById('answer-in').value.toLowerCase().trim();
-            const levelData = data[currentLevel];
+            const reply = document.getElementById('answer-in').value.toLowerCase().trim();
+            const lvl = database[currentLevel];
 
-            if(ans === levelData.questions[currentSub].a) {
-                if(currentSub < levelData.questions.length - 1) {
-                    currentSub++;
-                    showQuiz();
+            if(reply === lvl.questions[subQ].a) {
+                if(subQ < lvl.questions.length - 1) {
+                    subQ++;
+                    loadQuiz();
                 } else {
-                    document.getElementById('hint-txt').innerText = levelData.hint;
+                    document.getElementById('hint-txt').innerText = "Indizio: " + lvl.hint;
                     document.getElementById('hint-txt').style.display = 'block';
-                    document.getElementById('btn-scan').style.display = 'block';
+                    document.getElementById('btn-ar').style.display = 'block';
                 }
             } else {
-                alert("Ops! Risposta sbagliata.");
+                alert("Sbagliato!");
             }
         }
 
-        function goAR() {
-            document.getElementById('screen-quiz').style.display = 'none';
-            document.getElementById('game-stats').style.display = 'flex';
+        function startAR() {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('hud').style.display = 'flex';
             document.getElementById('instruction-bar').style.display = 'block';
         }
 
@@ -232,14 +250,14 @@
             const markers = document.querySelectorAll('a-marker');
             markers.forEach(m => {
                 m.addEventListener('markerFound', () => {
-                    const scanning = document.getElementById('instruction-bar').style.display === 'block';
-                    if(scanning && m.id === "marker-" + currentLevel) {
-                        score += 100;
-                        document.getElementById('score-display').innerText = score;
-                        alert("Bravissimo! Oggetto trovato.");
+                    const active = document.getElementById('instruction-bar').style.display === 'block';
+                    if(active && m.id === "marker-" + currentLevel) {
+                        points += 100;
+                        document.getElementById('score-tag').innerText = points;
+                        alert("TROVATO!");
                         currentLevel++;
-                        currentSub = 0;
-                        showQuiz();
+                        subQ = 0;
+                        loadQuiz();
                     }
                 });
             });
