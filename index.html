@@ -3,138 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Caccia al Tesoro AR</title>
+    <title>Scuola AR - Pro Edition</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 
     <style>
-        :root { --primary: #00d2ff; --dark: #111; --error: #ff3366; --success: #2ecc71; }
+        :root { --primary: #00d2ff; --dark: #111; --success: #2ecc71; }
 
+        /* FIX PER CHROME MOBILE */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: transparent !important; 
+            overflow: hidden; font-family: sans-serif;
+            background-color: #000;
+            overscroll-behavior: none; /* Impedisce il refresh a scorrimento di Chrome */
         }
 
-        /* SFONDO NERO PER NASCONDERE LA CAMERA ALL'INIZIO */
-        #bg-black {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--dark); z-index: 90000; pointer-events: none;
-        }
-
-        /* LIVELLO UI PRINCIPALE */
         #ui-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 99999; pointer-events: none;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; pointer-events: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* SCHERMATE (Pannelli centrali) */
-        .screen {
-            background: rgba(17, 17, 17, 0.95);
+        /* BOX DELLE DOMANDE */
+        .box {
+            background: rgba(0, 0, 0, 0.85);
             border: 2px solid var(--primary);
-            padding: 30px; border-radius: 15px;
-            width: 85%; max-width: 350px;
+            padding: 25px; border-radius: 15px;
+            width: 85%; max-width: 320px;
             text-align: center; color: white;
             pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(0, 210, 255, 0.2);
-            display: none; /* Nascosto di default */
+            backdrop-filter: blur(5px);
         }
 
-        .screen.active { display: block; }
-
-        /* HUD - Barra in alto */
+        /* HUD SUPERIORE */
         #hud {
-            position: fixed; top: 15px; left: 0; width: 100%;
-            display: none; justify-content: space-between; padding: 0 20px;
-            box-sizing: border-box; pointer-events: auto; z-index: 100000;
+            position: fixed; top: env(safe-area-inset-top, 10px); left: 0; width: 100%;
+            display: none; justify-content: space-between; padding: 10px 15px;
+            box-sizing: border-box; z-index: 200; pointer-events: none;
         }
 
         .badge {
-            background: #000; color: #fff; padding: 8px 12px;
-            border: 1px solid var(--primary); border-radius: 8px; font-weight: bold;
-            font-size: 14px;
+            background: rgba(0,0,0,0.8); color: white; padding: 8px 12px;
+            border: 1px solid var(--primary); border-radius: 10px;
+            font-weight: bold; font-family: monospace; font-size: 14px;
         }
 
-        /* MESSAGGI AR - Barra in basso */
-        #ar-message {
-            position: fixed; bottom: 30px; left: 5%; width: 90%;
-            background: rgba(0,0,0,0.9); color: var(--primary); padding: 15px;
-            border-radius: 10px; border: 2px solid var(--primary);
-            text-align: center; display: none; font-weight: bold;
-            z-index: 100000; pointer-events: auto;
+        /* BOTTONE "CONTINUA" DOPO AR */
+        #ar-nav {
+            position: fixed; bottom: 40px; left: 0; width: 100%;
+            display: none; justify-content: center; z-index: 300;
         }
 
-        h2, h3 { margin-top: 0; color: var(--primary); }
-        p { font-size: 16px; line-height: 1.5; margin-bottom: 20px; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; text-align: center; }
-        button { width: 100%; padding: 15px; background: var(--primary); border: none; color: #000; font-weight: bold; border-radius: 8px; font-size: 16px; cursor: pointer; text-transform: uppercase; margin-bottom: 10px;}
-        button.success { background: var(--success); color: white; }
+        .btn-success {
+            background: var(--success); color: white; border: none;
+            padding: 18px 35px; border-radius: 50px; font-weight: bold;
+            font-size: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            pointer-events: auto; cursor: pointer;
+        }
 
-        /* VIDEO CAMERA DIETRO TUTTO */
-        video { z-index: -1 !important; position: fixed !important; top: 0 !important; left: 0 !important; }
+        input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: none; font-size: 16px; }
+        button.main { width: 100%; padding: 15px; background: var(--primary); border: none; color: black; font-weight: bold; border-radius: 8px; font-size: 16px; }
+
+        /* FIX CAMERA CHROME */
+        .a-canvas { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
+        video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
     </style>
 </head>
 <body>
 
-    <div id="bg-black"></div>
-
     <div id="hud">
-        <div class="badge">⏳ <span id="timer-display">60:00</span></div>
-        <div class="badge">⭐ <span id="score-display">0</span></div>
+        <div class="badge">⏳ <span id="timer-txt">60:00</span></div>
+        <div class="badge">⭐ <span id="score-txt">0</span></div>
     </div>
 
-    <div id="ar-message">Cerca il Barcode nell'ambiente!</div>
-
     <div id="ui-layer">
-        
-        <div id="screen-login" class="screen active">
-            <h2>ACCESSO SCUOLA</h2>
-            <p>Inserisci la tua email studente per scaricare la tua missione.</p>
-            <input type="email" id="email-input" placeholder="es. nico@gmail.com">
-            <button onclick="login()">Inizia Avventura</button>
-            <p id="login-error" style="color:var(--error); display:none; font-size:14px;">Utente non trovato nel database.</p>
+        <div id="scr-login" class="box">
+            <h2>SCIENZA AR</h2>
+            <p>Inserisci email studente</p>
+            <input type="email" id="email" placeholder="nico@gmail.com">
+            <button class="main" onclick="doLogin()">ACCEDI</button>
         </div>
 
-        <div id="screen-quiz" class="screen">
-            <h3 id="quiz-title">DOMANDA 1/3</h3>
-            <p id="quiz-question">Testo domanda</p>
-            <input type="text" id="quiz-answer" placeholder="La tua risposta...">
-            <button onclick="checkAnswer()">Invia Risposta</button>
-            <p id="quiz-error" style="color:var(--error); display:none; font-weight:bold;">Risposta errata!</p>
+        <div id="scr-quiz" class="box" style="display:none;">
+            <h3 id="q-title" style="color:var(--primary); margin:0;">FASE 1</h3>
+            <p id="q-text" style="font-size:1.1em; margin:15px 0;">...</p>
+            <input type="text" id="ans" placeholder="Risposta...">
+            <button class="main" onclick="checkAns()">INVIA</button>
         </div>
+    </div>
 
-        <div id="screen-hint" class="screen">
-            <h2 style="color:var(--success)">SBLOCCATO!</h2>
-            <p>Hai superato le 3 domande. Ecco il tuo indizio per trovare l'oggetto:</p>
-            <p id="hint-text" style="font-size: 1.2em; font-weight: bold; color: white; background: #222; padding: 10px; border-radius: 8px;"></p>
-            <button class="success" onclick="startCamera()">Accendi Fotocamera</button>
-        </div>
-
-        <div id="screen-found" class="screen">
-            <h2 style="color:var(--success)">OGGETTO RILEVATO!</h2>
-            <p>Hai guadagnato 50 Punti.</p>
-            <button onclick="nextStage()">Continua Missione</button>
-        </div>
-
-        <div id="screen-end" class="screen">
-            <h2>MISSIONE COMPIUTA</h2>
-            <p>Hai trovato tutti gli oggetti!</p>
-            <p>Punti Base: <span id="end-base-score">0</span></p>
-            <p>Bonus Tempo (+1 pt/minuto): <span id="end-time-bonus">0</span></p>
-            <h1 style="color:var(--success)">TOTALE: <span id="end-total-score">0</span></h1>
-        </div>
-
+    <div id="ar-nav">
+        <button class="btn-success" onclick="goToNextStage()">CONTINUA MISSIONE ➔</button>
     </div>
 
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" vr-mode-ui="enabled: false">
         
-        <a-marker type="barcode" value="1" id="marker-1">
+        <a-marker type="barcode" value="1" id="mark-0">
             <a-image src="marker2.jpeg" rotation="-90 0 0" width="2" height="2"></a-image>
         </a-marker>
 
-        <a-marker type="barcode" value="2" id="marker-2">
+        <a-marker type="barcode" value="2" id="mark-1">
             <a-image src="marker3.jpeg" rotation="-90 0 0" width="2" height="2"></a-image>
         </a-marker>
 
@@ -142,158 +111,144 @@
     </a-scene>
 
     <script>
-        // --- IL NOSTRO "DATABASE" DEGLI ALUNNI ---
-        const database = {
+        const db = {
             "nico@gmail.com": [
                 {
-                    // FASE 1: 3 Domande + Barcode 1
-                    questions: [
-                        { q: "Qual è la formula dell'acqua?", a: "h2o" },
-                        { q: "Quanti pianeti ci sono nel sistema solare?", a: "8" },
-                        { q: "Quale gas respiriamo per vivere?", a: "ossigeno" }
+                    qs: [
+                        { q: "Formula acqua?", a: "h2o" },
+                        { q: "Quanti pianeti?", a: "8" },
+                        { q: "Gas vitale?", a: "ossigeno" }
                     ],
-                    barcodeId: "marker-1",
-                    hint: "Cerca il codice a barre numero 1 attaccato alla cattedra."
+                    hint: "Indizio: Cerca il Barcode 1 sulla cattedra!"
                 },
                 {
-                    // FASE 2: 3 Domande + Barcode 2
-                    questions: [
-                        { q: "Quante eliche ha il DNA?", a: "2" },
-                        { q: "L'animale più veloce del mondo?", a: "ghepardo" },
-                        { q: "Il continente con il deserto del Sahara?", a: "africa" }
+                    qs: [
+                        { q: "Eliche DNA?", a: "2" },
+                        { q: "Animale più veloce?", a: "ghepardo" },
+                        { q: "Capitale Italia?", a: "roma" }
                     ],
-                    barcodeId: "marker-2",
-                    hint: "Cerca il codice a barre numero 2 vicino alla finestra."
+                    hint: "Indizio: Cerca il Barcode 2 vicino alla porta!"
                 }
             ]
         };
 
-        // VARIABILI DI GIOCO
-        let missionData = [];
-        let currentStage = 0;      // Fase attuale (0 = Fase 1, 1 = Fase 2)
-        let currentQuestion = 0;   // Domanda attuale (0, 1, 2)
-        let score = 0;
-        let timeRemaining = 3600;  // 60 minuti in secondi
-        let timerInterval;
-        let isScanning = false;
+        let currentMission = [];
+        let stage = 0;
+        let qIdx = 0;
+        let points = 0;
+        let timeLeft = 3600;
+        let isWaitingForMarker = false;
 
-        // FUNZIONI DI GESTIONE SCHERMATE
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        // 1. LOGIN E AVVIO
-        function login() {
-            const email = document.getElementById('email-input').value.toLowerCase().trim();
-            if (database[email]) {
-                missionData = database[email];
-                document.getElementById('bg-black').style.display = 'none'; // Svela la camera (che sarà dietro)
+        function doLogin() {
+            const mail = document.getElementById('email').value.toLowerCase().trim();
+            if(db[mail]) {
+                currentMission = db[mail];
+                document.getElementById('scr-login').style.display = 'none';
                 document.getElementById('hud').style.display = 'flex';
                 startTimer();
-                loadQuestion();
-            } else {
-                document.getElementById('login-error').style.display = 'block';
-            }
+                showQuestion();
+            } else { alert("Email non abilitata!"); }
         }
 
-        // 2. CARICA LA DOMANDA
-        function loadQuestion() {
-            if (currentStage >= missionData.length) {
-                endGame();
+        function showQuestion() {
+            if(stage >= currentMission.length) {
+                finishGame();
                 return;
             }
 
-            const stageData = missionData[currentStage];
+            const currentStageData = currentMission[stage];
+
+            // Se abbiamo finito le 3 domande del blocco
+            if(qIdx >= 3) {
+                document.getElementById('scr-quiz').innerHTML = `
+                    <h2 style="color:var(--success)">DOMANDE OK!</h2>
+                    <p style="font-weight:bold">${currentStageData.hint}</p>
+                    <button class="main" style="background:white" onclick="closeQuizAndScan()">CERCA OGGETTO</button>
+                `;
+            } else {
+                document.getElementById('q-title').innerText = `FASE ${stage+1} - DOMANDA ${qIdx+1}/3`;
+                document.getElementById('q-text').innerText = currentStageData.qs[qIdx].q;
+                document.getElementById('ans').value = "";
+            }
+            document.getElementById('scr-quiz').style.display = 'block';
+        }
+
+        function checkAns() {
+            const userAns = document.getElementById('ans').value.toLowerCase().trim();
+            const correctAns = currentMission[stage].qs[qIdx].a;
+
+            if(userAns === correctAns) {
+                qIdx++;
+                showQuestion();
+            } else {
+                alert("Risposta sbagliata! Riprova.");
+            }
+        }
+
+        function closeQuizAndScan() {
+            document.getElementById('scr-quiz').style.display = 'none';
+            isWaitingForMarker = true;
+        }
+
+        function goToNextStage() {
+            // Aggiunge punti e pulisce per il prossimo stage
+            points += 50;
+            document.getElementById('score-txt').innerText = points;
+            document.getElementById('ar-nav').style.display = 'none';
             
-            // Se abbiamo risposto a tutte e 3 le domande di questa fase, andiamo all'AR
-            if (currentQuestion >= stageData.questions.length) {
-                document.getElementById('hint-text').innerText = stageData.hint;
-                showScreen('screen-hint');
-                return;
-            }
-
-            // Altrimenti carichiamo la domanda attuale
-            document.getElementById('quiz-title').innerText = `FASE ${currentStage + 1} - DOMANDA ${currentQuestion + 1}/3`;
-            document.getElementById('quiz-question').innerText = stageData.questions[currentQuestion].q;
-            document.getElementById('quiz-answer').value = "";
-            document.getElementById('quiz-error').style.display = 'none';
-            showScreen('screen-quiz');
+            stage++;
+            qIdx = 0;
+            isWaitingForMarker = false;
+            
+            // Ricostruisce il contenuto del quiz (pulendo il tasto "Cerca oggetto")
+            resetQuizBox();
+            showQuestion();
         }
 
-        // 3. CONTROLLA LA RISPOSTA
-        function checkAnswer() {
-            const answer = document.getElementById('quiz-answer').value.toLowerCase().trim();
-            const correctAnswer = missionData[currentStage].questions[currentQuestion].a;
-
-            if (answer === correctAnswer) {
-                currentQuestion++; // Passa alla prossima domanda
-                loadQuestion();
-            } else {
-                document.getElementById('quiz-error').style.display = 'block';
-            }
+        function resetQuizBox() {
+            document.getElementById('scr-quiz').innerHTML = `
+                <h3 id="q-title" style="color:var(--primary); margin:0;"></h3>
+                <p id="q-text" style="font-size:1.1em; margin:15px 0;"></p>
+                <input type="text" id="ans" placeholder="Risposta...">
+                <button class="main" onclick="checkAns()">INVIA</button>
+            `;
         }
 
-        // 4. AVVIA FOTOCAMERA PER CERCARE IL BARCODE
-        function startCamera() {
-            showScreen('none'); // Nasconde tutte le finestre
-            document.getElementById('ar-message').style.display = 'block';
-            isScanning = true;
-        }
-
-        // 5. GESTIONE BARCODE TROVATO (Viene chiamato da AR.js)
+        // --- GESTIONE MARKER ---
         window.onload = () => {
             const markers = document.querySelectorAll('a-marker');
-            markers.forEach(marker => {
-                marker.addEventListener('markerFound', () => {
-                    // Controlla se stiamo scansionando e se è il marker giusto per questa fase
-                    if (isScanning && marker.id === missionData[currentStage].barcodeId) {
-                        isScanning = false;
-                        document.getElementById('ar-message').style.display = 'none';
-                        
-                        score += 50;
-                        document.getElementById('score-display').innerText = score;
-                        
-                        showScreen('screen-found');
+            markers.forEach((m, idx) => {
+                m.addEventListener('markerFound', () => {
+                    // Se il marker trovato è quello dello stage attuale e siamo in fase di scansione
+                    if(isWaitingForMarker && idx === stage) {
+                        document.getElementById('ar-nav').style.display = 'flex';
                     }
                 });
             });
-        };
-
-        // 6. PASSA ALLA FASE SUCCESSIVA
-        function nextStage() {
-            currentStage++;
-            currentQuestion = 0; // Resetta il contatore domande per la nuova fase
-            loadQuestion();
         }
 
-        // 7. FINE GIOCO E CALCOLO PUNTI EXTRA
-        function endGame() {
-            clearInterval(timerInterval);
-            document.getElementById('hud').style.display = 'none';
-            
-            const minutesLeft = Math.floor(timeRemaining / 60);
-            const totalScore = score + minutesLeft;
-
-            document.getElementById('end-base-score').innerText = score;
-            document.getElementById('end-time-bonus').innerText = minutesLeft;
-            document.getElementById('end-total-score').innerText = totalScore;
-            
-            showScreen('screen-end');
-        }
-
-        // --- GESTIONE TIMER ---
         function startTimer() {
-            timerInterval = setInterval(() => {
-                if (timeRemaining <= 0) {
-                    endGame();
-                    return;
-                }
-                timeRemaining--;
-                let m = Math.floor(timeRemaining / 60);
-                let s = timeRemaining % 60;
-                document.getElementById('timer-display').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            setInterval(() => {
+                if(timeLeft <= 0) return;
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                document.getElementById('timer-txt').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
             }, 1000);
+        }
+
+        function finishGame() {
+            document.getElementById('scr-quiz').style.display = 'block';
+            const bonus = Math.floor(timeLeft / 60);
+            document.getElementById('scr-quiz').innerHTML = `
+                <h2 style="color:var(--success)">MISSIONE COMPLETA!</h2>
+                <p>Punti Barcode: ${points}</p>
+                <p>Bonus Tempo: ${bonus}</p>
+                <hr>
+                <h1>TOTALE: ${points + bonus}</h1>
+                <button class="main" onclick="location.reload()">RIGIOCA</button>
+            `;
+            document.getElementById('hud').style.display = 'none';
         }
     </script>
 </body>
