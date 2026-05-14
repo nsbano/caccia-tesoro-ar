@@ -3,110 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Scienza AR - Missione Finale</title>
+    <title>Scienza AR - Stabile</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 
     <style>
-        :root { --primary: #00d2ff; --dark: #1a1a2e; --success: #2ecc71; --accent: #f1c40f; }
+        :root { --primary: #00d2ff; --dark: #1a1a2e; --success: #2ecc71; }
 
-        * { box-sizing: border-box; touch-action: manipulation; }
-        
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: #000; 
+            overflow: hidden; font-family: sans-serif;
+            background-color: #000; /* Nero iniziale */
         }
 
-        /* TUTTE LE SCHERMATE SONO FISSE E COPRONO TUTTO */
+        /* UI LAYER - Questo deve stare sopra a tutto */
+        #ui-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 99999; /* Z-index altissimo */
+            pointer-events: none;
+        }
+
         .overlay {
-            position: fixed !important; 
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--dark);
             display: flex; align-items: center; justify-content: center;
-            z-index: 10000; pointer-events: auto;
+            pointer-events: auto;
         }
 
-        /* BOX CONTENITORE: Niente transform per evitare vibrazioni */
         .box {
             background: rgba(255, 255, 255, 0.1);
-            border: 2px solid var(--primary);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 30px; border-radius: 20px;
-            width: 85%; max-width: 320px;
+            padding: 25px; border-radius: 20px;
+            border: 2px solid var(--primary);
+            width: 85%; max-width: 300px;
             text-align: center; color: white;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            pointer-events: auto;
         }
 
-        /* HUD - Punti e Nome (Sempre sopra tutto) */
+        /* HUD - PUNTI E NOME */
         #hud-top {
-            position: fixed; top: env(safe-area-inset-top, 20px); left: 0; width: 100%;
-            display: none; justify-content: space-between; padding: 10px 20px;
-            z-index: 9999; pointer-events: none;
+            position: fixed; top: 20px; left: 0; width: 100%;
+            display: none; justify-content: space-between;
+            padding: 0 20px; box-sizing: border-box;
         }
 
+        .badge {
+            background: rgba(0, 0, 0, 0.8); color: #fff;
+            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--primary);
+            font-size: 14px; font-weight: bold; pointer-events: auto;
+        }
+
+        /* ISTRUZIONI IN BASSO */
         #bottom-bar {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            width: 85%; background: rgba(0,0,0,0.85); border: 2px solid var(--primary);
-            color: white; padding: 15px; border-radius: 15px;
-            text-align: center; display: none; z-index: 9999;
+            position: fixed; bottom: 30px; left: 5%; width: 90%;
+            background: rgba(0, 0, 0, 0.8); color: white;
+            padding: 15px; border-radius: 12px;
+            text-align: center; display: none;
+            border: 2px solid var(--primary); font-weight: bold;
         }
 
-        .badge { background: #000; color: var(--accent); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--accent); font-weight: bold; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
 
-        input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 10px; border: none; font-size: 16px; background: rgba(255,255,255,0.9); }
-        button { width: 100%; padding: 15px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 10px; font-size: 16px; cursor: pointer; }
-        
-        /* FIX VIDEO PER DISPOSITIVI MOBILE */
-        video { position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; z-index: -1 !important; }
+        /* FIX VIDEO PER EVITARE ZOOM */
+        video { 
+            position: fixed !important; top: 0 !important; left: 0 !important; 
+            width: 100vw !important; height: 100vh !important; 
+            object-fit: cover !important; z-index: -1 !important; 
+        }
     </style>
 </head>
 <body>
 
-    <div id="scr-login" class="overlay">
-        <div class="box">
-            <h2 style="color:var(--primary); margin:0 0 20px 0;">MISSIONE SCIENZA</h2>
-            <input type="text" id="nome" placeholder="Inserisci il tuo nome">
-            <button onclick="start()">INIZIA SFIDA</button>
-        </div>
-    </div>
-
-    <div id="scr-quiz" class="overlay" style="display:none;">
-        <div class="box">
-            <h3 id="lvl-title" style="color:var(--primary)">LIVELLO 1</h3>
-            <p id="question" style="font-size: 1.1em; line-height: 1.4;">...</p>
-            <input type="text" id="ans" placeholder="La tua risposta...">
-            <button onclick="check()">CONFERMA</button>
-            <div id="hint-box" style="display:none; margin-top:20px;">
-                <p id="hint" style="color:var(--accent); font-weight: bold;"></p>
-                <button onclick="openAR()" style="background:var(--success)">ATTIVA SCANNER AR</button>
+    <div id="ui-layer">
+        <div id="scr-login" class="overlay">
+            <div class="box">
+                <h2 style="margin-top:0">MISSIONE AR</h2>
+                <input type="text" id="nome" placeholder="Il tuo Nome">
+                <button onclick="start()">ENTRA</button>
             </div>
         </div>
-    </div>
 
-    <div id="scr-success" class="overlay" style="display:none; background:rgba(0,0,0,0.7)">
-        <div class="box" style="border-color:var(--success)">
-            <h2 style="color:var(--success)">OGGETTO TROVATO!</h2>
-            <p>Ottimo lavoro, hai sbloccato i dati.</p>
-            <button onclick="nextLevel()" style="background:var(--success)">PROSSIMA DOMANDA ➔</button>
+        <div id="scr-quiz" class="overlay" style="display:none;">
+            <div class="box">
+                <h3 id="lvl-title">LIVELLO 1</h3>
+                <p id="question">...</p>
+                <input type="text" id="ans" placeholder="Risposta...">
+                <button onclick="check()">VERIFICA</button>
+                <div id="hint-box" style="display:none; margin-top:15px;">
+                    <p id="hint" style="color:var(--primary)"></p>
+                    <button onclick="openAR()" style="background:var(--success)">APRI CAMERA</button>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div id="scr-end" class="overlay" style="display:none;">
-        <div class="box" style="border-color:var(--accent)">
-            <h2 style="color:var(--accent)">MISSIONE COMPIUTA!</h2>
-            <p>Hai completato tutti i livelli.</p>
-            <h3 id="final-score" style="color:white">Punti: 0</h3>
-            <button onclick="location.reload()">GIOCA ANCORA</button>
+        <div id="scr-success" class="overlay" style="display:none; background:transparent;">
+            <div class="box" style="border-color:var(--success); background:rgba(0,0,0,0.8)">
+                <h2 style="color:var(--success)">TROVATO!</h2>
+                <button onclick="nextLevel()" style="background:var(--success)">PROSSIMO</button>
+            </div>
         </div>
-    </div>
 
-    <div id="hud-top">
-        <div class="badge" id="name-display">---</div>
-        <div class="badge">PT: <span id="pts-display">0</span></div>
+        <div id="hud-top">
+            <div class="badge" id="name-display">---</div>
+            <div class="badge">PUNTI: <span id="pts-display">0</span></div>
+        </div>
+        <div id="bottom-bar">Inquadra l'oggetto!</div>
     </div>
-    <div id="bottom-bar">Sposta la camera sul marker...</div>
 
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" vr-mode-ui="enabled: false">
         
@@ -122,37 +126,29 @@
     </a-scene>
 
     <script>
-        let lvl = 0; 
-        let score = 0;
+        let lvl = 0; let score = 0;
         const db = [
-            { q: "Formula chimica dell'acqua?", a: "h2o", h: "Cerca il Barcode 1" },
-            { q: "Quante eliche ha il DNA?", a: "2", h: "Cerca il Barcode 2" }
+            { q: "Formula acqua?", a: "h2o", h: "Cerca il Barcode 1" },
+            { q: "Eliche DNA?", a: "2", h: "Cerca il Barcode 2" }
         ];
 
         function start() {
             const n = document.getElementById('nome').value;
-            if(!n) return alert("Inserisci il nome per iniziare!");
+            if(!n) return alert("Manca il nome!");
             document.getElementById('name-display').innerText = n.toUpperCase();
             document.getElementById('scr-login').style.display = 'none';
-            document.body.style.backgroundColor = "transparent";
+            document.body.style.backgroundColor = "transparent"; // Questo accende la camera
             loadQuiz();
         }
 
         function loadQuiz() {
-            // Se abbiamo finito i livelli nel database
-            if(lvl >= db.length) {
-                showEnd();
-                return;
-            }
-            
-            // Reset interfacce
+            if(lvl >= db.length) { alert("FINE MISSIONE!"); location.reload(); return; }
             document.getElementById('scr-quiz').style.display = 'flex';
             document.getElementById('scr-success').style.display = 'none';
             document.getElementById('hud-top').style.display = 'none';
             document.getElementById('bottom-bar').style.display = 'none';
             document.getElementById('hint-box').style.display = 'none';
-
-            document.getElementById('lvl-title').innerText = "LIVELLO " + (lvl + 1);
+            document.getElementById('lvl-title').innerText = "LIVELLO " + (lvl+1);
             document.getElementById('question').innerText = db[lvl].q;
             document.getElementById('ans').value = "";
         }
@@ -160,11 +156,9 @@
         function check() {
             const r = document.getElementById('ans').value.toLowerCase().trim();
             if(r === db[lvl].a) {
-                document.getElementById('hint').innerText = "INDICAZIONE: " + db[lvl].h;
+                document.getElementById('hint').innerText = "Indizio: " + db[lvl].h;
                 document.getElementById('hint-box').style.display = 'block';
-            } else { 
-                alert("Risposta errata, riprova!"); 
-            }
+            } else { alert("Sbagliato!"); }
         }
 
         function openAR() {
@@ -178,22 +172,11 @@
             loadQuiz();
         }
 
-        function showEnd() {
-            document.getElementById('scr-success').style.display = 'none';
-            document.getElementById('hud-top').style.display = 'none';
-            document.getElementById('bottom-bar').style.display = 'none';
-            document.getElementById('scr-end').style.display = 'flex';
-            document.getElementById('final-score').innerText = "PUNTI TOTALI: " + score;
-        }
-
-        // LOGICA DI RICONOSCIMENTO MARKER
         window.onload = () => {
             const markers = document.querySelectorAll('a-marker');
             markers.forEach(m => {
                 m.addEventListener('markerFound', () => {
-                    // Controlla se siamo in modalità "Scanner" (bottom-bar visibile)
                     const isScanning = document.getElementById('bottom-bar').style.display === 'block';
-                    
                     if(isScanning && m.id === "mark-" + lvl) {
                         score += 100;
                         document.getElementById('pts-display').innerText = score;
