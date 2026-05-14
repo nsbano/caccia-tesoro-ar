@@ -14,7 +14,187 @@
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; font-family: sans-serif;
-            background-color: #000; /* Nero iniziale */
+            background-color: #000; /* Nero <!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scienza AR - Fix Totale</title>
+    
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+
+    <style>
+        /* RESET RADICALE */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: sans-serif;
+            background-color: transparent !important; 
+        }
+
+        /* SFONDO NERO INIZIALE (Solo per il caricamento) */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a2e; z-index: 100000;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* CONTENITORE UI - SOPRA TUTTO */
+        .ui-fixed {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 99999; pointer-events: none;
+        }
+
+        .box {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00d2ff; padding: 25px; border-radius: 15px;
+            width: 85%; max-width: 300px; text-align: center; color: white;
+            pointer-events: auto;
+        }
+
+        /* HUD - POSIZIONI FISSE */
+        #hud-top {
+            position: fixed; top: 20px; width: 100%;
+            display: none; justify-content: space-between; padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        .badge {
+            background: #000; color: #00d2ff; padding: 10px;
+            border: 1px solid #00d2ff; border-radius: 8px; font-weight: bold;
+        }
+
+        #bottom-bar {
+            position: fixed; bottom: 30px; left: 5%; width: 90%;
+            background: rgba(0,0,0,0.8); color: white; padding: 15px;
+            border-radius: 10px; border: 2px solid #00d2ff;
+            text-align: center; display: none; font-weight: bold;
+        }
+
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #00d2ff; border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; }
+
+        /* FORZA VIDEO A STARE SOTTO */
+        video { z-index: -1 !important; position: fixed !important; top: 0 !important; left: 0 !important; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="box">
+            <h2>MISSIONE AR</h2>
+            <input type="text" id="nome" placeholder="Il tuo Nome">
+            <button onclick="start()">ACCEDI</button>
+        </div>
+    </div>
+
+    <div class="ui-fixed">
+        <div id="scr-quiz" class="box" style="display:none;">
+            <h3 id="lvl-title">LIVELLO 1</h3>
+            <p id="question">...</p>
+            <input type="text" id="ans" placeholder="Risposta...">
+            <button onclick="check()">VERIFICA</button>
+            <div id="hint-box" style="display:none; margin-top:10px;">
+                <p id="hint" style="color:#00d2ff"></p>
+                <button onclick="openAR()" style="background:#2ecc71">VAI ALLA CAMERA</button>
+            </div>
+        </div>
+
+        <div id="scr-success" class="box" style="display:none; border-color:#2ecc71;">
+            <h2 style="color:#2ecc71">TROVATO!</h2>
+            <button onclick="nextLevel()" style="background:#2ecc71">CONTINUA</button>
+        </div>
+
+        <div id="hud-top">
+            <div class="badge" id="name-display">---</div>
+            <div class="badge">PT: <span id="pts-display">0</span></div>
+        </div>
+        <div id="bottom-bar">Punta il Barcode!</div>
+    </div>
+
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" vr-mode-ui="enabled: false">
+        
+        <a-marker type="barcode" value="1" id="mark-0">
+            <a-image src="marker2.jpeg" rotation="-90 0 0" width="2" height="2"></a-image>
+        </a-marker>
+
+        <a-marker type="barcode" value="2" id="mark-1">
+            <a-image src="marker3.jpeg" rotation="-90 0 0" width="2" height="2"></a-image>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        let lvl = 0; let score = 0;
+        const db = [
+            { q: "Formula acqua?", a: "h2o", h: "Barcode n. 1" },
+            { q: "Eliche DNA?", a: "2", h: "Barcode n. 2" }
+        ];
+
+        function start() {
+            const n = document.getElementById('nome').value;
+            if(!n) return alert("Metti il nome!");
+            document.getElementById('name-display').innerText = n.toUpperCase();
+            
+            // Nascondi il muro nero del login
+            document.getElementById('loading-screen').style.display = 'none';
+            loadQuiz();
+        }
+
+        function loadQuiz() {
+            if(lvl >= db.length) { alert("FINE!"); location.reload(); return; }
+            
+            // Mostra il quiz sopra la camera
+            document.getElementById('scr-quiz').style.display = 'block';
+            document.getElementById('scr-success').style.display = 'none';
+            document.getElementById('hud-top').style.display = 'none';
+            document.getElementById('bottom-bar').style.display = 'none';
+            document.getElementById('hint-box').style.display = 'none';
+
+            document.getElementById('lvl-title').innerText = "LIVELLO " + (lvl+1);
+            document.getElementById('question').innerText = db[lvl].q;
+            document.getElementById('ans').value = "";
+        }
+
+        function check() {
+            const r = document.getElementById('ans').value.toLowerCase().trim();
+            if(r === db[lvl].a) {
+                document.getElementById('hint').innerText = "Indizio: " + db[lvl].h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else { alert("Riprova!"); }
+        }
+
+        function openAR() {
+            document.getElementById('scr-quiz').style.display = 'none';
+            document.getElementById('hud-top').style.display = 'flex';
+            document.getElementById('bottom-bar').style.display = 'block';
+        }
+
+        function nextLevel() {
+            lvl++;
+            loadQuiz();
+        }
+
+        // RILEVAMENTO MARKER
+        window.onload = () => {
+            const markers = document.querySelectorAll('a-marker');
+            markers.forEach(m => {
+                m.addEventListener('markerFound', () => {
+                    if(document.getElementById('bottom-bar').style.display === 'block' && m.id === "mark-" + lvl) {
+                        score += 100;
+                        document.getElementById('pts-display').innerText = score;
+                        document.getElementById('bottom-bar').style.display = 'none';
+                        document.getElementById('scr-success').style.display = 'block';
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html> */
         }
 
         /* UI LAYER - Questo deve stare sopra a tutto */
