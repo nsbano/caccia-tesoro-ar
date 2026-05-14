@@ -2,119 +2,100 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Scienza AR - Missione Stabile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scienza AR - Versione Stabile</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 
     <style>
-        :root { --primary: #00d2ff; --dark: #1a1a2e; --accent: #f1c40f; --success: #2ecc71; }
+        :root { --primary: #00d2ff; --dark: #1a1a2e; --success: #2ecc71; }
 
-        /* BLOCCAGGIO TOTALE DELLO SCHERMO E SFONDO TRASPARENTE */
-        html, body { 
-            margin: 0; padding: 0; 
-            width: 100vw; height: 100vh; 
-            overflow: hidden; 
-            position: fixed; /* Impedisce qualsiasi "rimbalzo" o scorrimento su iOS/Android */
-            font-family: sans-serif;
-            background-color: transparent !important; 
+        /* RESET TOTALE */
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; font-family: sans-serif;
+            background-color: #000; /* Nero finché non parte la camera */
         }
 
-        /* UI LAYER */
-        #ui-layer {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 9999; pointer-events: none;
+        /* UI GENERALE */
+        .interface {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10; pointer-events: none;
         }
 
-        /* OVERLAY - Sfondo solido per nascondere la camera quando serve */
+        /* SCHERMATE (LOGIN, QUIZ, SUCCESSO) */
         .overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--dark);
-            z-index: 10000; pointer-events: auto;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark); display: flex;
+            align-items: center; justify-content: center;
+            pointer-events: auto; z-index: 20;
         }
 
-        /* BOX CENTRATO MATEMATICAMENTE (Antitastiera) */
-        .glass-box {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 25px; border-radius: 20px;
-            border: 2px solid var(--primary);
-            width: 80%; max-width: 300px;
+        .box {
+            background: rgba(255,255,255,0.1); border: 2px solid var(--primary);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            padding: 20px; border-radius: 15px; width: 85%; max-width: 300px;
             text-align: center; color: white;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        /* HUD TOP */
+        /* HUD - PUNTI E NOME (IN ALTO) */
         #hud-top {
-            position: fixed; top: 0; left: 0; width: 100%;
-            display: none; justify-content: space-between;
-            padding: 40px 20px 0 20px; box-sizing: border-box;
-            pointer-events: none;
+            position: absolute; top: 20px; left: 0; width: 100%;
+            display: none; justify-content: space-between; padding: 0 15px;
+            z-index: 30;
         }
 
-        .badge {
-            background: rgba(0, 0, 0, 0.85); color: var(--accent);
-            padding: 8px 12px; border-radius: 10px; border: 2px solid var(--accent);
-            font-size: 14px; font-weight: bold; pointer-events: auto;
-        }
-
-        /* BARRA BOTTOM */
+        /* ISTRUZIONI (IN BASSO) */
         #bottom-bar {
-            position: fixed; bottom: 30px; left: 50%;
-            transform: translateX(-50%);
-            width: 85%; max-width: 350px;
-            background: rgba(0, 0, 0, 0.85); color: white;
-            padding: 15px; border-radius: 15px;
-            text-align: center; display: none;
-            font-size: 16px; font-weight: bold;
-            border: 2px solid var(--primary);
-            box-sizing: border-box;
+            position: absolute; bottom: 30px; left: 5%; width: 90%;
+            background: rgba(0,0,0,0.8); border: 2px solid var(--primary);
+            color: white; padding: 12px; border-radius: 10px;
+            text-align: center; display: none; z-index: 30; font-weight: bold;
         }
 
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-        .btn-success { background: var(--success) !important; margin-top: 20px; font-size: 18px; }
+        .badge { background: #000; color: var(--primary); padding: 5px 10px; border-radius: 5px; border: 1px solid var(--primary); }
 
-        /* FIX VIDEO: Copre tutto lo schermo senza deformarsi */
-        video { 
-            position: fixed !important; top: 0 !important; left: 0 !important; 
-            width: 100vw !important; height: 100vh !important; 
-            object-fit: cover !important; z-index: -1 !important; 
-        }
+        /* INPUT E BOTTONI */
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; }
+        button { width: 100%; padding: 12px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 5px; }
+
+        /* FIX CAMERA */
+        video { position: fixed !important; top: 0 !important; left: 0 !important; z-index: -1 !important; }
+        .a-canvas { z-index: 1 !important; }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
+    <div class="interface">
+        
         <div id="scr-login" class="overlay">
-            <div class="glass-box">
-                <h2 style="color:var(--primary); margin-top:0;">MISSIONE AR</h2>
+            <div class="box">
+                <h2>MISSIONE AR</h2>
                 <input type="text" id="nome" placeholder="Nome">
-                <input type="text" id="cognome" placeholder="Cognome">
-                <button onclick="start()">ACCEDI</button>
+                <button onclick="start()">ENTRA</button>
             </div>
         </div>
 
-        <div id="scr-quiz" class="overlay" style="display:none; background: rgba(26, 26, 46, 0.98);">
-            <div class="glass-box">
-                <h3 id="lvl-title" style="color:var(--primary)">OGGETTO 1</h3>
+        <div id="scr-quiz" class="overlay" style="display:none;">
+            <div class="box">
+                <h3 id="lvl-title">OGGETTO 1</h3>
                 <p id="question">...</p>
                 <input type="text" id="ans" placeholder="Risposta...">
                 <button onclick="check()">VERIFICA</button>
-                <p id="hint" style="display:none; color:var(--accent); font-weight:bold; margin-top:15px;"></p>
-                <button id="btn-ar" onclick="openAR()" style="display:none; background:var(--success);">VAI ALLA CAMERA</button>
+                <div id="hint-box" style="display:none; margin-top:10px;">
+                    <p id="hint" style="color:var(--primary); font-size: 0.9em;"></p>
+                    <button onclick="openAR()" style="background:var(--success)">APRI CAMERA</button>
+                </div>
             </div>
         </div>
 
-        <div id="scr-success" class="overlay" style="display:none; background: transparent;">
-            <div class="glass-box" style="border-color: var(--success); background: rgba(0,0,0,0.85);">
-                <h2 style="color:var(--success)">TROVATO!</h2>
-                <p>Ottimo! Hai sbloccato il contenuto.</p>
-                <button class="btn-success" onclick="nextLevel()">CONTINUA ➔</button>
+        <div id="scr-success" class="overlay" style="display:none; background:rgba(0,0,0,0.6)">
+            <div class="box" style="border-color:var(--success)">
+                <h2 style="color:var(--success)">BRAVO!</h2>
+                <p>Hai trovato l'oggetto.</p>
+                <button onclick="nextLevel()" style="background:var(--success)">PROSSIMO LIVELLO</button>
             </div>
         </div>
 
@@ -123,11 +104,10 @@
             <div class="badge">PUNTI: <span id="pts-display">0</span></div>
         </div>
         <div id="bottom-bar">Inquadra il codice dell'oggetto!</div>
+
     </div>
 
-    <a-scene embedded 
-             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-             vr-mode-ui="enabled: false">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" vr-mode-ui="enabled: false">
         
         <a-marker type="barcode" value="1" id="mark-0">
             <a-image src="marker2.jpeg" rotation="-90 0 0" width="2" height="2"></a-image>
@@ -141,41 +121,44 @@
     </a-scene>
 
     <script>
-        let lvl = 0; let sub = 0; let score = 0;
+        let lvl = 0; let score = 0;
         const db = [
-            { qs: [{q: "Formula acqua?", a: "h2o"}], h: "Inquadra il QR n.1" },
-            { qs: [{q: "Eliche DNA?", a: "2"}], h: "Inquadra il QR n.2" }
+            { q: "Formula acqua?", a: "h2o", h: "Cerca il codice n.1" },
+            { q: "Eliche DNA?", a: "2", h: "Cerca il codice n.2" }
         ];
 
         function start() {
             const n = document.getElementById('nome').value;
-            if(!n) return alert("Manca il nome!");
+            if(!n) return alert("Scrivi il nome!");
             document.getElementById('name-display').innerText = n.toUpperCase();
             document.getElementById('scr-login').style.display = 'none';
+            // Forza la trasparenza per vedere la camera
+            document.body.style.backgroundColor = "transparent";
             loadQuiz();
         }
 
         function loadQuiz() {
             if(lvl >= db.length) { alert("FINE!"); location.reload(); return; }
-            document.getElementById('scr-quiz').style.display = 'block';
+            
+            document.getElementById('scr-quiz').style.display = 'flex';
             document.getElementById('scr-success').style.display = 'none';
             document.getElementById('hud-top').style.display = 'none';
             document.getElementById('bottom-bar').style.display = 'none';
-            document.getElementById('btn-ar').style.display = 'none';
-            document.getElementById('hint').style.display = 'none';
+            document.getElementById('hint-box').style.display = 'none';
 
-            document.getElementById('lvl-title').innerText = "OGGETTO " + (lvl+1);
-            document.getElementById('question').innerText = db[lvl].qs[sub].q;
+            document.getElementById('lvl-title').innerText = "LIVELLO " + (lvl+1);
+            document.getElementById('question').innerText = db[lvl].q;
             document.getElementById('ans').value = "";
         }
 
         function check() {
             const r = document.getElementById('ans').value.toLowerCase().trim();
-            if(r === db[lvl].qs[sub].a) {
-                document.getElementById('hint').innerText = db[lvl].h;
-                document.getElementById('hint').style.display = 'block';
-                document.getElementById('btn-ar').style.display = 'block';
-            } else { alert("Riprova!"); }
+            if(r === db[lvl].a) {
+                document.getElementById('hint').innerText = "INDIZIO: " + db[lvl].h;
+                document.getElementById('hint-box').style.display = 'block';
+            } else { 
+                alert("Sbagliato!"); 
+            }
         }
 
         function openAR() {
@@ -189,15 +172,17 @@
             loadQuiz();
         }
 
+        // RICONOSCIMENTO
         window.onload = () => {
-            document.querySelectorAll('a-marker').forEach(m => {
+            const markers = document.querySelectorAll('a-marker');
+            markers.forEach(m => {
                 m.addEventListener('markerFound', () => {
-                    const isScanning = document.getElementById('bottom-bar').style.display === 'block';
-                    if(isScanning && m.id === "mark-" + lvl) {
+                    const scanning = document.getElementById('bottom-bar').style.display === 'block';
+                    if(scanning && m.id === "mark-" + lvl) {
                         score += 100;
                         document.getElementById('pts-display').innerText = score;
                         document.getElementById('bottom-bar').style.display = 'none';
-                        document.getElementById('scr-success').style.display = 'block';
+                        document.getElementById('scr-success').style.display = 'flex';
                     }
                 });
             });
