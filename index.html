@@ -3,76 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Scienza AR - Missione QR</title>
+    <title>Scienza AR - Missione Finale</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 
     <style>
-        :root { --primary: #00d2ff; --dark: #1a1a2e; --accent: #f1c40f; }
+        :root { --primary: #00d2ff; --dark: #1a1a2e; --accent: #f1c40f; --success: #2ecc71; }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: sans-serif;
+            overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif;
             background-color: transparent !important;
         }
 
-        /* UI LAYER */
+        /* UI LAYER - BLOCCATO */
         #ui-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999; pointer-events: none;
         }
 
-        /* SCHERMATE MENU */
+        /* FINESTRE DI DIALOGO - Centrate e stabili */
         .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--dark); display: flex; align-items: center; justify-content: center;
-            pointer-events: auto;
-        }
-
-        .glass-box {
-            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px); padding: 30px; border-radius: 25px;
-            border: 2px solid var(--primary); width: 85%; max-width: 320px;
+            position: absolute; 
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%); /* Centratura assoluta anti-tastiera */
+            width: 85%; max-width: 320px;
+            background: rgba(26, 26, 46, 0.95); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 25px; border-radius: 20px;
+            border: 2px solid var(--primary);
             text-align: center; color: white;
+            pointer-events: auto;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* HUD - CORREZIONE POSIZIONAMENTO */
+        /* HUD - CONTATORI (FORZATI IN ALTO) */
         #hud-top {
             position: absolute; top: 40px; left: 0; width: 100%;
             display: none; justify-content: space-between;
             padding: 0 20px; box-sizing: border-box;
+            z-index: 10001;
         }
 
         .badge {
             background: rgba(0, 0, 0, 0.8); color: var(--accent);
             padding: 10px 15px; border-radius: 12px; border: 2px solid var(--accent);
-            font-size: 18px; font-weight: bold; pointer-events: auto;
+            font-size: 16px; font-weight: bold;
         }
 
-        /* BARRA IN BASSO - FIX CENTRATURA */
-       #bottom-bar {
-    position: fixed; /* Fixed è più stabile di absolute per la UI */
-    bottom: 30px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    width: 85%; 
-    max-width: 400px; /* Evita che diventi troppo larga su tablet */
-    background: rgba(0, 0, 0, 0.85); 
-    color: white;
-    padding: 20px; 
-    border-radius: 20px;
-    text-align: center; 
-    display: none;
-    font-size: 18px; 
-    font-weight: bold;
-    border: 2px solid var(--primary);
-    box-sizing: border-box; /* Fondamentale: include il padding nel calcolo della larghezza */
-    z-index: 10000;
-}
+        /* BARRA ISTRUZIONI IN BASSO */
+        #bottom-bar {
+            position: absolute; bottom: 40px; left: 5%; width: 90%;
+            background: rgba(0, 0, 0, 0.85); color: white;
+            padding: 15px; border-radius: 15px;
+            text-align: center; display: none;
+            font-size: 16px; font-weight: bold;
+            border: 2px solid var(--primary);
+            box-sizing: border-box;
+            z-index: 10001;
+        }
 
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--primary); background: #fff; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        
+        .btn-next { background: var(--success) !important; font-size: 18px; }
 
         video { z-index: -1 !important; position: fixed !important; top:0; left:0; }
     </style>
@@ -80,29 +77,31 @@
 <body>
 
     <div id="ui-layer">
-        <div id="scr-login" class="overlay">
-            <div class="glass-box">
-                <h2 style="color:var(--primary)">MISSIONE AR</h2>
-                <input type="text" id="nome" placeholder="Nome">
-                <input type="text" id="cognome" placeholder="Cognome">
-                <button onclick="start()">GIOCA</button>
-            </div>
+        <div id="scr-login" class="overlay" style="display: block;">
+            <h2 style="color:var(--primary); margin-top:0;">MISSIONE AR</h2>
+            <input type="text" id="nome" placeholder="Nome">
+            <input type="text" id="cognome" placeholder="Cognome">
+            <button onclick="start()">INIZIA SFIDA</button>
         </div>
 
-        <div id="scr-quiz" class="overlay" style="display:none;">
-            <div class="glass-box">
-                <h3 id="lvl-title" style="color:var(--primary)">OGGETTO 1</h3>
-                <p id="question">...</p>
-                <input type="text" id="ans" placeholder="Risposta...">
-                <button onclick="check()">VERIFICA</button>
-                <p id="hint" style="display:none; color:var(--accent); font-weight:bold; margin-top:15px;"></p>
-                <button id="btn-ar" onclick="openAR()" style="display:none; background:#2ecc71;">SCANSIONA QR</button>
-            </div>
+        <div id="scr-quiz" class="overlay">
+            <h3 id="lvl-title" style="color:var(--primary); margin:0;">OGGETTO 1</h3>
+            <p id="question" style="margin: 15px 0;">...</p>
+            <input type="text" id="ans" placeholder="Risposta...">
+            <button onclick="check()">VERIFICA</button>
+            <p id="hint" style="display:none; color:var(--accent); font-weight:bold; margin: 10px 0;"></p>
+            <button id="btn-ar" onclick="openAR()" style="display:none; background:var(--success);">CERCA OGGETTO</button>
+        </div>
+
+        <div id="scr-success" class="overlay">
+            <h2 style="color:var(--success)">TROVATO!</h2>
+            <p>Ottimo lavoro, hai guadagnato 100 punti.</p>
+            <button class="btn-next" onclick="nextLevel()">CONTINUA ➔</button>
         </div>
 
         <div id="hud-top">
             <div class="badge" id="name-display">---</div>
-            <div class="badge">PT: <span id="pts-display">0</span></div>
+            <div class="badge">PUNTI: <span id="pts-display">0</span></div>
         </div>
         <div id="bottom-bar">Inquadra il codice dell'oggetto!</div>
     </div>
@@ -111,13 +110,12 @@
              arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
              vr-mode-ui="enabled: false">
         
-        <a-marker type="barcode" value="0.png" id="mark-0">
+        <a-marker type="barcode" value="1" id="mark-0">
             <a-image src="marker2.jpeg" rotation="-90 0 0" width="2" height="2"></a-image>
-            <a-box position="0 0.5 0" material="color: #00d2ff; opacity: 0.8" animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
         </a-marker>
 
         <a-marker type="barcode" value="2" id="mark-1">
-            <a-sphere position="0 0.5 0" radius="0.6" color="#ff4757"></a-sphere>
+            <a-image src="marker3.jpeg" rotation="-90 0 0" width="2" height="2"></a-image>
         </a-marker>
 
         <a-entity camera></a-entity>
@@ -126,21 +124,27 @@
     <script>
         let lvl = 0; let sub = 0; let score = 0;
         const db = [
-            { qs: [{q: "Formula acqua?", a: "h2o"}, {q: "Bolle a?", a: "100"}], h: "Inquadra il QR sul lavandino" },
-            { qs: [{q: "Eliche DNA?", a: "2"}], h: "Inquadra il QR in biblioteca" }
+            { qs: [{q: "Formula dell'acqua?", a: "h2o"}], h: "Inquadra il QR n.1 al lavandino" },
+            { qs: [{q: "Quante eliche ha il DNA?", a: "2"}], h: "Inquadra il QR n.2 in biblioteca" }
         ];
 
         function start() {
             const n = document.getElementById('nome').value;
-            if(!n) return alert("Inserisci nome!");
+            if(!n) return alert("Inserisci il tuo nome!");
             document.getElementById('name-display').innerText = n.toUpperCase();
             document.getElementById('scr-login').style.display = 'none';
             loadQuiz();
         }
 
         function loadQuiz() {
-            if(lvl >= db.length) { alert("FINE MISSIONE!"); location.reload(); return; }
-            document.getElementById('scr-quiz').style.display = 'flex';
+            if(lvl >= db.length) { 
+                alert("MISSIONE COMPLETATA!"); 
+                location.reload(); 
+                return; 
+            }
+            // Reset interfacce
+            document.getElementById('scr-quiz').style.display = 'block';
+            document.getElementById('scr-success').style.display = 'none';
             document.getElementById('hud-top').style.display = 'none';
             document.getElementById('bottom-bar').style.display = 'none';
             document.getElementById('btn-ar').style.display = 'none';
@@ -154,13 +158,10 @@
         function check() {
             const r = document.getElementById('ans').value.toLowerCase().trim();
             if(r === db[lvl].qs[sub].a) {
-                if(sub < db[lvl].qs.length - 1) { sub++; loadQuiz(); }
-                else {
-                    document.getElementById('hint').innerText = db[lvl].h;
-                    document.getElementById('hint').style.display = 'block';
-                    document.getElementById('btn-ar').style.display = 'block';
-                }
-            } else { alert("Riprova!"); }
+                document.getElementById('hint').innerText = "INDIZIO: " + db[lvl].h;
+                document.getElementById('hint').style.display = 'block';
+                document.getElementById('btn-ar').style.display = 'block';
+            } else { alert("Risposta errata, riprova!"); }
         }
 
         function openAR() {
@@ -169,22 +170,29 @@
             document.getElementById('bottom-bar').style.display = 'block';
         }
 
-        // Fix per il video su mobile
-        window.addEventListener('camera-init', () => {
-            document.body.style.backgroundColor = "transparent";
-        });
+        function nextLevel() {
+            lvl++;
+            sub = 0;
+            loadQuiz();
+        }
 
-        // RICONOSCIMENTO MARKER
+        // RICONOSCIMENTO
         window.onload = () => {
             document.querySelectorAll('a-marker').forEach(m => {
                 m.addEventListener('markerFound', () => {
-                    const scanning = document.getElementById('bottom-bar').style.display === 'block';
-                    if(scanning && m.id === "mark-" + lvl) {
+                    // Controlla se l'utente sta effettivamente cercando (barra istruzioni visibile)
+                    const isScanning = document.getElementById('bottom-bar').style.display === 'block';
+                    
+                    if(isScanning && m.id === "mark-" + lvl) {
+                        // 1. Assegna punti
                         score += 100;
                         document.getElementById('pts-display').innerText = score;
-                        alert("OGGETTO RICONOSCIUTO! +100");
-                        lvl++; sub = 0;
-                        loadQuiz();
+                        
+                        // 2. Nasconde istruzioni e mostra schermata successo con tasto Continua
+                        document.getElementById('bottom-bar').style.display = 'none';
+                        document.getElementById('scr-success').style.display = 'block';
+                        
+                        // NOTA: L'immagine AR (a-image) apparirà automaticamente sopra il barcode fisico
                     }
                 });
             });
