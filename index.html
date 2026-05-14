@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Scienza AR - Fix Stabilità</title>
+    <title>Scienza AR - Missione Stabile</title>
     
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
@@ -11,33 +11,36 @@
     <style>
         :root { --primary: #00d2ff; --dark: #1a1a2e; --accent: #f1c40f; --success: #2ecc71; }
 
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; font-family: sans-serif;
-            background-color: #000 !important; /* Sfondo nero di base */
+        /* BLOCCAGGIO TOTALE DELLO SCHERMO E SFONDO TRASPARENTE */
+        html, body { 
+            margin: 0; padding: 0; 
+            width: 100vw; height: 100vh; 
+            overflow: hidden; 
+            position: fixed; /* Impedisce qualsiasi "rimbalzo" o scorrimento su iOS/Android */
+            font-family: sans-serif;
+            background-color: transparent !important; 
         }
 
-        /* UI LAYER - BLOCCATO E FISSO */
+        /* UI LAYER */
         #ui-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: 9999; pointer-events: none;
         }
 
-        /* SCHERMATE MENU - Fondo solido per nascondere la camera all'inizio */
+        /* OVERLAY - Sfondo solido per nascondere la camera quando serve */
         .overlay {
-            position: fixed; /* Fixed invece di absolute */
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--dark); /* Solido al 100% */
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: auto;
-            z-index: 10000;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--dark);
+            z-index: 10000; pointer-events: auto;
         }
 
-        /* Il box interno che contiene i testi */
+        /* BOX CENTRATO MATEMATICAMENTE (Antitastiera) */
         .glass-box {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             padding: 25px; border-radius: 20px;
             border: 2px solid var(--primary);
             width: 80%; max-width: 300px;
@@ -45,7 +48,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        /* HUD - POSIZIONE FISSA IN ALTO */
+        /* HUD TOP */
         #hud-top {
             position: fixed; top: 0; left: 0; width: 100%;
             display: none; justify-content: space-between;
@@ -59,7 +62,7 @@
             font-size: 14px; font-weight: bold; pointer-events: auto;
         }
 
-        /* BARRA ISTRUZIONI FISSA IN BASSO */
+        /* BARRA BOTTOM */
         #bottom-bar {
             position: fixed; bottom: 30px; left: 50%;
             transform: translateX(-50%);
@@ -74,11 +77,14 @@
 
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
         button { width: 100%; padding: 15px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-        
         .btn-success { background: var(--success) !important; margin-top: 20px; font-size: 18px; }
 
-        /* Fix per il video che non deve subire lo zoom del browser */
-        video { z-index: -1 !important; position: fixed !important; top: 0 !important; left: 0 !important; }
+        /* FIX VIDEO: Copre tutto lo schermo senza deformarsi */
+        video { 
+            position: fixed !important; top: 0 !important; left: 0 !important; 
+            width: 100vw !important; height: 100vh !important; 
+            object-fit: cover !important; z-index: -1 !important; 
+        }
     </style>
 </head>
 <body>
@@ -105,7 +111,7 @@
         </div>
 
         <div id="scr-success" class="overlay" style="display:none; background: transparent;">
-            <div class="glass-box" style="border-color: var(--success); background: rgba(0,0,0,0.8);">
+            <div class="glass-box" style="border-color: var(--success); background: rgba(0,0,0,0.85);">
                 <h2 style="color:var(--success)">TROVATO!</h2>
                 <p>Ottimo! Hai sbloccato il contenuto.</p>
                 <button class="btn-success" onclick="nextLevel()">CONTINUA ➔</button>
@@ -120,12 +126,11 @@
     </div>
 
     <a-scene embedded 
-             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; displayWidth: 1280; displayHeight: 720;"
+             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
              vr-mode-ui="enabled: false">
         
         <a-marker type="barcode" value="1" id="mark-0">
             <a-image src="marker2.jpeg" rotation="-90 0 0" width="2" height="2"></a-image>
-            <a-box position="0 0.5 0" material="opacity: 0.1"></a-box>
         </a-marker>
 
         <a-marker type="barcode" value="2" id="mark-1">
@@ -146,13 +151,13 @@
             const n = document.getElementById('nome').value;
             if(!n) return alert("Manca il nome!");
             document.getElementById('name-display').innerText = n.toUpperCase();
-            document.getElementById('scr-login').style.display = 'none'; // Scompare il muro scuro
+            document.getElementById('scr-login').style.display = 'none';
             loadQuiz();
         }
 
         function loadQuiz() {
             if(lvl >= db.length) { alert("FINE!"); location.reload(); return; }
-            document.getElementById('scr-quiz').style.display = 'flex';
+            document.getElementById('scr-quiz').style.display = 'block';
             document.getElementById('scr-success').style.display = 'none';
             document.getElementById('hud-top').style.display = 'none';
             document.getElementById('bottom-bar').style.display = 'none';
@@ -184,7 +189,6 @@
             loadQuiz();
         }
 
-        // GESTIONE MARKER
         window.onload = () => {
             document.querySelectorAll('a-marker').forEach(m => {
                 m.addEventListener('markerFound', () => {
@@ -192,10 +196,8 @@
                     if(isScanning && m.id === "mark-" + lvl) {
                         score += 100;
                         document.getElementById('pts-display').innerText = score;
-                        
-                        // Mostra schermata successo (con tasto continua)
                         document.getElementById('bottom-bar').style.display = 'none';
-                        document.getElementById('scr-success').style.display = 'flex';
+                        document.getElementById('scr-success').style.display = 'block';
                     }
                 });
             });
